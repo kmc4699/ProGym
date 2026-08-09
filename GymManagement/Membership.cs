@@ -4,9 +4,9 @@ namespace GymManagement
 {
     public class Membership
     {
-        public string MemberId { get; }
-        public string MemberName { get; }
-        public DateTime ExpiryDate { get; private set; }
+        public string MemberId { get; }       // unique ID for the member
+        public string MemberName { get; }     // member's name
+        public DateTime ExpiryDate { get; private set; }  // when membership ends
 
         public Membership(string memberId, string memberName, DateTime expiryDate)
         {
@@ -21,7 +21,7 @@ namespace GymManagement
             ExpiryDate = expiryDate;
         }
 
-        // A membership is active if today's date is on or before the expiry date.
+        // checks if membership hasn't expired yet
         public bool IsActive()
         {
             return DateTime.Now <= ExpiryDate;
