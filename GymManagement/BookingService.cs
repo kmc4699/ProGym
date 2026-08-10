@@ -31,5 +31,22 @@ namespace GymManagement
                 $"Booking confirmed: {member.MemberName} is booked into '{fitnessClass.Name}'.",
                 booking);
         }
+
+        // FR10: cancels an existing booking and releases the class slot back
+        // so it can be booked again. Returns a clear result either way.
+        public BookingResult CancelBooking(Booking booking)
+        {
+            if (booking == null)
+                return new BookingResult(false, "Cancellation failed: booking details are required.");
+            if (booking.IsCancelled)
+                return new BookingResult(false, "Cancellation failed: this booking is already cancelled.");
+
+            booking.Cancel();
+            booking.FitnessClass.ReleaseSlot();
+
+            return new BookingResult(true,
+                $"Booking cancelled for '{booking.FitnessClass.Name}'. The slot is now free.",
+                booking);
+        }
     }
 }
