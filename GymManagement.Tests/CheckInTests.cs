@@ -21,14 +21,14 @@ namespace GymManagement.Tests
         public void CheckIn_ExpiredMembership_ThrowsException()
         {
             var membership = new Membership("M1", "Jane Doe", DateTime.Now.AddDays(-1));
-            Assert.ThrowsException<InvalidOperationException>(() => new CheckIn(membership));
+            Assert.ThrowsExactly<InvalidOperationException>(() => new CheckIn(membership));
         }
 
         // Check-in shouldn't work without a membership at all
         [TestMethod]
         public void CheckIn_NullMembership_ThrowsException()
         {
-            Assert.ThrowsException<ArgumentNullException>(() => new CheckIn(null!));
+            Assert.ThrowsExactly<ArgumentNullException>(() => new CheckIn(null!));
         }
     }
 }

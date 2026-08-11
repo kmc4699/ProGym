@@ -27,8 +27,8 @@ namespace GymManagement.Tests
         [TestMethod]
         public void Membership_EmptyMemberId_ThrowsException()
         {
-            Assert.ThrowsException<ArgumentException>(() =>
-                new Membership("", "Jane Doe", DateTime.Now.AddDays(30)));
+            Assert.ThrowsExactly<ArgumentException>(() =>
+                   new Membership("", "Jane Doe", DateTime.Now.AddDays(30)));
         }
     }
 }
