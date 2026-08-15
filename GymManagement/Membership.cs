@@ -26,5 +26,14 @@ namespace GymManagement
         {
             return DateTime.Now <= ExpiryDate;
         }
+
+        // extends the membership by setting a new, later expiry date
+        public void Renew(DateTime newExpiryDate)
+        {
+            if (newExpiryDate <= ExpiryDate)
+                throw new ArgumentException("New expiry date must be after the current expiry date.");
+
+            ExpiryDate = newExpiryDate;
+        }
     }
 }
