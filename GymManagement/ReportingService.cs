@@ -39,5 +39,14 @@ namespace GymManagement
                 .Select(c => new ClassUtilisation(c.Name, c.BookedCount, c.Capacity))
                 .ToList();
         }
+
+        // FR16: how many check-ins (attendances) have been recorded.
+        public int GetTotalCheckIns(IEnumerable<CheckIn> checkIns)
+        {
+            if (checkIns == null)
+                throw new ArgumentNullException(nameof(checkIns));
+
+            return checkIns.Count();
+        }
     }
 }
