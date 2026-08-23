@@ -7,7 +7,6 @@ namespace GymManagement.Tests
     [TestClass]
     public class MembershipTests
     {
-        // membership should be active if it hasn't expired yet
         [TestMethod]
         public void Membership_ActiveWhenExpiryInFuture_ReturnsTrue()
         {
@@ -15,7 +14,6 @@ namespace GymManagement.Tests
             Assert.IsTrue(membership.IsActive());
         }
 
-        // membership should be inactive once the expiry date has passed
         [TestMethod]
         public void Membership_ExpiredWhenExpiryInPast_ReturnsFalse()
         {
@@ -23,7 +21,6 @@ namespace GymManagement.Tests
             Assert.IsFalse(membership.IsActive());
         }
 
-        // can't create a membership without a member ID
         [TestMethod]
         public void Membership_EmptyMemberId_ThrowsException()
         {
@@ -31,26 +28,42 @@ namespace GymManagement.Tests
                 new Membership("", "Jane Doe", DateTime.Now.AddDays(30)));
         }
 
-        // renewing should push the expiry date further into the future
         [TestMethod]
         public void Membership_Renew_ExtendsExpiryDate()
         {
             var membership = new Membership("M1", "Jane Doe", DateTime.Now.AddDays(10));
             var newExpiry = DateTime.Now.AddDays(40);
-
             membership.Renew(newExpiry);
-
             Assert.AreEqual(newExpiry, membership.ExpiryDate);
         }
 
-        // Can't renew to an earlier date than the current expiry
         [TestMethod]
         public void Membership_Renew_EarlierDate_ThrowsException()
         {
             var membership = new Membership("M1", "Jane Doe", DateTime.Now.AddDays(30));
-
             Assert.ThrowsExactly<ArgumentException>(() =>
                 membership.Renew(DateTime.Now.AddDays(5)));
+        }
+
+        [TestMethod]
+        public void Membership_PastExpiryDate_ThrowsException()
+        {
+            Assert.ThrowsExactly<ArgumentException>(() =>
+                new Membership("M1", "Jane Doe", DateTime.Now.Date.AddDays(-5)));
+        }
+
+        [TestMethod]
+        public void Membership_DaysUntilExpiry_ReturnsCorrectCount()
+        {
+            var membership = new Membership("M1", "Jane Doe", DateTime.Now.Date.AddDays(10));
+            Assert.AreEqual(10, membership.DaysUntilExpiry());
+        }
+
+        [TestMethod]
+        public void Membership_ExpiryIsToday_IsStillActive()
+        {
+            var membership = new Membership("M1", "Jane Doe", DateTime.Now.Date);
+            Assert.IsTrue(membership.IsActive());
         }
     }
 }
