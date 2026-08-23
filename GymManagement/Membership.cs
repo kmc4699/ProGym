@@ -16,6 +16,9 @@ namespace GymManagement
             if (string.IsNullOrWhiteSpace(memberName))
                 throw new ArgumentException("Member name is required.");
 
+            if (expiryDate < DateTime.Now.Date)
+                throw new ArgumentException("Expiry date cannot be in the past.");
+
             MemberId = memberId;
             MemberName = memberName;
             ExpiryDate = expiryDate;
@@ -34,6 +37,13 @@ namespace GymManagement
                 throw new ArgumentException("New expiry date must be after the current expiry date.");
 
             ExpiryDate = newExpiryDate;
+        }
+
+        // returns how many days are left until the membership expires
+        // (negative number if already expired)
+        public int DaysUntilExpiry()
+        {
+            return (ExpiryDate.Date - DateTime.Now.Date).Days;
         }
     }
 }
