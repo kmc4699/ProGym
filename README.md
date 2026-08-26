@@ -66,8 +66,8 @@ It should say "30 passed, 0 failed."
 
 ## Team
 
-Srikar Kurani (23203952) - Membership + Check-in
-Ali Keshtkaran (22187440) - Booking + Dashboard
+- Srikar Kurani (23203952) - Membership + Check-in
+- Ali Keshtkaran (22187440) - Booking + Dashboard
 
 We're both committing straight to `master`.
 
