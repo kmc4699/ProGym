@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="GymManagement.Tests/GymManagement.Tests.csproj" />
+  <Project Path="GymManagement.Web/GymManagement.Web.csproj" Id="72338906-0491-44cd-9e0f-c3036e8d7db5" />
   <Project Path="GymManagement/GymManagement.csproj" />
 </Solution>
