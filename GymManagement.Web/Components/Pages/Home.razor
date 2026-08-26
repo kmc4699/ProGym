@@ -1,7 +1,69 @@
-﻿@page "/"
+@page "/"
+@inject GymManagement.Web.Services.GymDataStore Store
+@inject GymManagement.ReportingService Reporting
 
-<PageTitle>Home</PageTitle>
+<PageTitle>ProGym Dashboard</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1>ProGym Dashboard</h1>
 
-Welcome to your new app.
+@{
+    // pulls the summary numbers from ReportingService
+    var summary = Reporting.GetMembershipSummary(Store.Members);
+    var utilisation = Reporting.GetClassUtilisation(Store.Classes);
+    var totalCheckIns = Reporting.GetTotalCheckIns(Store.CheckIns);
+}
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Active Memberships</h5>
+                <p class="card-text display-6">@summary.ActiveCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-danger mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Expired Memberships</h5>
+                <p class="card-text display-6">@summary.ExpiredCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white bg-primary mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Total Check-Ins</h5>
+                <p class="card-text display-6">@totalCheckIns</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3>Class Utilisation</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Class</th>
+            <th>Booked</th>
+            <th>Capacity</th>
+            <th>Available</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var u in utilisation)
+        {
+            <tr>
+                <td>@u.ClassName</td>
+                <td>@u.Booked</td>
+                <td>@u.Capacity</td>
+                <td>@u.AvailableSlots</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (!Store.Classes.Any())
+{
+    <p class="text-muted">No classes yet — add one on the Classes page.</p>
+}
