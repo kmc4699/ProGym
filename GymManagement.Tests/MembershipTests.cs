@@ -17,7 +17,13 @@ namespace GymManagement.Tests
         [TestMethod]
         public void Membership_ExpiredWhenExpiryInPast_ReturnsFalse()
         {
-            var membership = new Membership("M1", "Jane Doe", DateTime.Now.AddDays(-1));
+            // Uses a fake clock so we can create a valid membership, then move
+            // time forward past its expiry date
+            var clock = new FakeClock { Today = DateTime.Today };
+            var membership = new Membership("M1", "Jane Doe", DateTime.Today.AddDays(5), clock);
+
+            clock.Today = DateTime.Today.AddDays(10);
+
             Assert.IsFalse(membership.IsActive());
         }
 
@@ -41,8 +47,13 @@ namespace GymManagement.Tests
         public void Membership_Renew_EarlierDate_ThrowsException()
         {
             var membership = new Membership("M1", "Jane Doe", DateTime.Now.AddDays(30));
+            var originalExpiry = membership.ExpiryDate;
+
             Assert.ThrowsExactly<ArgumentException>(() =>
                 membership.Renew(DateTime.Now.AddDays(5)));
+
+            // Also check the expiry date wasn't changed
+            Assert.AreEqual(originalExpiry, membership.ExpiryDate);
         }
 
         [TestMethod]
@@ -64,6 +75,18 @@ namespace GymManagement.Tests
         {
             var membership = new Membership("M1", "Jane Doe", DateTime.Now.Date);
             Assert.IsTrue(membership.IsActive());
+        }
+
+        [TestMethod]
+        public void Membership_RenewToDateEqualToCurrentExpiry_ThrowsException()
+        {
+            var membership = new Membership("M1", "Jane Doe", DateTime.Now.Date.AddDays(10));
+            var originalExpiry = membership.ExpiryDate;
+
+            Assert.ThrowsExactly<ArgumentException>(() =>
+                membership.Renew(membership.ExpiryDate));
+
+            Assert.AreEqual(originalExpiry, membership.ExpiryDate);
         }
     }
 }
