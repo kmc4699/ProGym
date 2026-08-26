@@ -20,7 +20,10 @@ namespace GymManagement.Tests
         [TestMethod]
         public void CheckIn_ExpiredMembership_ThrowsException()
         {
-            var membership = new Membership("M1", "Jane Doe", DateTime.Now.AddDays(-1));
+            var clock = new FakeClock { Today = DateTime.Today };
+            var membership = new Membership("M1", "Jane Doe", DateTime.Today.AddDays(5), clock);
+            clock.Today = DateTime.Today.AddDays(10);
+
             Assert.ThrowsExactly<InvalidOperationException>(() => new CheckIn(membership));
         }
 
