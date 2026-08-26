@@ -1,0 +1,88 @@
+@page "/classes"
+@inject GymManagement.Web.Services.GymDataStore Store
+@using GymManagement
+
+<PageTitle>Fitness Classes</PageTitle>
+
+<h1>Fitness Classes</h1>
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="alert @(isError ? "alert-danger" : "alert-success")">@message</div>
+}
+
+<!-- adds a new class -->
+<h3>Add Class</h3>
+<EditForm Model="newClass" OnValidSubmit="AddClass">
+    <div class="mb-2">
+        <label>Class ID</label>
+        <InputText class="form-control" @bind-Value="newClass.Id" />
+    </div>
+    <div class="mb-2">
+        <label>Name</label>
+        <InputText class="form-control" @bind-Value="newClass.Name" />
+    </div>
+    <div class="mb-2">
+        <label>Start Date</label>
+        <InputDate class="form-control" @bind-Value="newClass.StartTime" />
+    </div>
+    <div class="mb-2">
+        <label>Capacity</label>
+        <InputNumber class="form-control" @bind-Value="newClass.Capacity" />
+    </div>
+    <button type="submit" class="btn btn-primary">Add Class</button>
+</EditForm>
+
+<!-- shows every class with how full it is -->
+<h3 class="mt-4">All Classes</h3>
+<table class="table table-striped">
+    <thead>
+        <tr><th>ID</th><th>Name</th><th>Start</th><th>Booked</th><th>Capacity</th><th>Available</th></tr>
+    </thead>
+    <tbody>
+        @foreach (var c in Store.Classes)
+        {
+            <tr>
+                <td>@c.Id</td>
+                <td>@c.Name</td>
+                <td>@c.StartTime.ToString("g")</td>
+                <td>@c.BookedCount</td>
+                <td>@c.Capacity</td>
+                <td>@c.AvailableSlots</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    // holds what's typed into the add-class form
+    private class NewClassForm
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public DateTime StartTime { get; set; } = DateTime.Today.AddDays(1);
+        public int Capacity { get; set; } = 10;
+    }
+
+    private NewClassForm newClass = new();
+    private string? message;
+    private bool isError;
+
+    // creates a class - FitnessClass's own constructor does the validation
+    private void AddClass()
+    {
+        try
+        {
+            var fitnessClass = new FitnessClass(newClass.Id, newClass.Name, newClass.StartTime, newClass.Capacity);
+            Store.Classes.Add(fitnessClass);
+            message = $"Added class {fitnessClass.Name}.";
+            isError = false;
+            newClass = new NewClassForm();
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            isError = true;
+        }
+    }
+}
