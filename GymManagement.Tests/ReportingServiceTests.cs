@@ -1,3 +1,5 @@
+using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using GymManagement;
 
 namespace GymManagement.Tests
@@ -8,8 +10,14 @@ namespace GymManagement.Tests
         private static Membership Active(string id) =>
             new Membership(id, "Member " + id, DateTime.Today.AddMonths(1));
 
-        private static Membership Expired(string id) =>
-            new Membership(id, "Member " + id, DateTime.Today.AddDays(-1));
+        // was expired via a past date directly - now uses a fake clock instead
+        private static Membership Expired(string id)
+        {
+            var clock = new FakeClock { Today = DateTime.Today };
+            var membership = new Membership(id, "Member " + id, DateTime.Today.AddDays(5), clock);
+            clock.Today = DateTime.Today.AddDays(10);
+            return membership;
+        }
 
         [TestMethod]
         public void GetMembershipSummary_CountsActiveAndExpired()
@@ -30,7 +38,7 @@ namespace GymManagement.Tests
             var reporting = new ReportingService();
             var yoga = new FitnessClass("C1", "Yoga", DateTime.Today.AddDays(1), 5);
             yoga.ReserveSlot();
-            yoga.ReserveSlot(); // 2 booked out of 5
+            yoga.ReserveSlot();
 
             var result = reporting.GetClassUtilisation(new[] { yoga });
 
@@ -57,7 +65,6 @@ namespace GymManagement.Tests
         public void GetMembershipSummary_NullInput_ThrowsException()
         {
             var reporting = new ReportingService();
-
             Assert.Throws<ArgumentNullException>(() => reporting.GetMembershipSummary(null!));
         }
 
@@ -65,7 +72,6 @@ namespace GymManagement.Tests
         public void GetClassUtilisation_NullInput_ThrowsException()
         {
             var reporting = new ReportingService();
-
             Assert.Throws<ArgumentNullException>(() => reporting.GetClassUtilisation(null!));
         }
 
@@ -73,7 +79,6 @@ namespace GymManagement.Tests
         public void GetTotalCheckIns_NullInput_ThrowsException()
         {
             var reporting = new ReportingService();
-
             Assert.Throws<ArgumentNullException>(() => reporting.GetTotalCheckIns(null!));
         }
     }
