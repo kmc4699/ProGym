@@ -1,10 +1,18 @@
+using GymManagement;
 using GymManagement.Web.Components;
+using GymManagement.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// Shared app services - singletons so every page sees the same data
+// and calls the same booking / reporting logic.
+builder.Services.AddSingleton<GymDataStore>();
+builder.Services.AddSingleton<BookingService>();
+builder.Services.AddSingleton<ReportingService>();
 
 var app = builder.Build();
 
