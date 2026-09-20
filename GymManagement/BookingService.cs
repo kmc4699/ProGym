@@ -12,6 +12,11 @@ namespace GymManagement
             if (fitnessClass == null)
                 return new BookingResult(false, "Booking failed: class details are required.");
 
+            // FR7: reject bookings for a class whose start time has already passed.
+            if (fitnessClass.StartTime < DateTime.Now)
+                return new BookingResult(false,
+                    $"Booking failed: '{fitnessClass.Name}' has already started or ended.");
+
             // FR6: the member's membership must be active.
             if (!member.IsActive())
                 return new BookingResult(false,
