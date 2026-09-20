@@ -1,5 +1,7 @@
 # ProGym
 
+[![CI](https://github.com/kmc4699/ProGym/actions/workflows/ci.yml/badge.svg)](https://github.com/kmc4699/ProGym/actions/workflows/ci.yml)
+
 A gym management system built for our ENSE707 Software Quality Assurance
 mid-project. Small gyms often manage memberships and class bookings manually
 (paper sign-in sheets, spreadsheets), which leads to problems like
@@ -47,7 +49,7 @@ Then open whatever URL shows up in the console.
 dotnet test GymManagement.slnx
 ```
 
-It should say "30 passed, 0 failed."
+It should say "35 passed, 0 failed."
 
 ## What works and what doesn't yet
 
@@ -57,7 +59,7 @@ It should say "30 passed, 0 failed."
 - Booking with capacity + expired-member checks
 - Cancelling a booking releases the slot
 - Dashboard with live numbers
-- 30 unit tests covering the core rules
+- 35 unit tests covering the core rules
 
 **Still to do** (also in the report):
 - Reject bookings for classes that have already started/passed
