@@ -119,6 +119,14 @@
     {
         try
         {
+            // FR1 - member IDs must be unique. Reject if this ID is already taken.
+            if (Store.FindMember(newMember.MemberId) != null)
+            {
+                message = $"Member ID '{newMember.MemberId}' is already registered.";
+                isError = true;
+                return;
+            }
+
             var membership = new Membership(newMember.MemberId, newMember.MemberName, newMember.ExpiryDate);
             Store.Members.Add(membership);
             message = $"Registered {membership.MemberName}.";
