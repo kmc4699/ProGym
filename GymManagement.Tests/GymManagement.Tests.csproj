@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GymManagement\GymManagement.csproj" />
+    <ProjectReference Include="..\GymManagement.Web\GymManagement.Web.csproj" />
   </ItemGroup>
 
 </Project>
