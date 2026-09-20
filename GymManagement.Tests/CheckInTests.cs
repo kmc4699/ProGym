@@ -65,5 +65,25 @@ namespace GymManagement.Tests
         {
             Assert.ThrowsExactly<ArgumentNullException>(() => new CheckIn((Booking)null!));
         }
+
+        // FR12: check-in should default to Attended when no status is given.
+        [TestMethod]
+        public void CheckIn_DefaultStatus_IsAttended()
+        {
+            var membership = new Membership("M1", "Jane Doe", DateTime.Now.AddDays(30));
+            var checkIn = new CheckIn(membership);
+
+            Assert.AreEqual(AttendanceStatus.Attended, checkIn.Status);
+        }
+
+        // FR12: a no-show should be explicitly recorded when specified.
+        [TestMethod]
+        public void CheckIn_NoShowStatus_IsRecorded()
+        {
+            var membership = new Membership("M1", "Jane Doe", DateTime.Now.AddDays(30));
+            var checkIn = new CheckIn(membership, AttendanceStatus.NoShow);
+
+            Assert.AreEqual(AttendanceStatus.NoShow, checkIn.Status);
+        }
     }
 }
