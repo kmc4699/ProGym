@@ -1,0 +1,175 @@
+﻿@page "/members"
+@inject GymManagement.Web.Services.GymDataStore Store
+@using GymManagement
+
+<PageTitle>Members</PageTitle>
+
+<h1>Members</h1>
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="alert @(isError ? "alert-danger" : "alert-success")">@message</div>
+}
+
+<!-- registers a new member -->
+<h3>Register New Member</h3>
+<EditForm Model="newMember" OnValidSubmit="RegisterMember">
+    <div class="mb-2">
+        <label>Member ID</label>
+        <InputText class="form-control" @bind-Value="newMember.MemberId" />
+    </div>
+    <div class="mb-2">
+        <label>Member Name</label>
+        <InputText class="form-control" @bind-Value="newMember.MemberName" />
+    </div>
+    <div class="mb-2">
+        <label>Expiry Date</label>
+        <InputDate class="form-control" @bind-Value="newMember.ExpiryDate" />
+    </div>
+    <button type="submit" class="btn btn-primary">Register</button>
+</EditForm>
+
+<!-- extends an existing member's expiry date -->
+<h3 class="mt-4">Renew Membership</h3>
+<EditForm Model="renewForm" OnValidSubmit="RenewMembership">
+    <div class="mb-2">
+        <label>Member</label>
+        <InputSelect class="form-control" @bind-Value="renewForm.MemberId">
+            <option value="">-- select --</option>
+            @foreach (var m in Store.Members)
+            {
+                <option value="@m.MemberId">@m.MemberName (@m.MemberId)</option>
+            }
+        </InputSelect>
+    </div>
+    <div class="mb-2">
+        <label>New Expiry Date</label>
+        <InputDate class="form-control" @bind-Value="renewForm.NewExpiryDate" />
+    </div>
+    <button type="submit" class="btn btn-secondary">Renew</button>
+</EditForm>
+
+<!-- shows every member with their status and a check-in button -->
+<h3 class="mt-4">All Members</h3>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Expiry</th>
+            <th>Status</th>
+            <th>Days Left</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var m in Store.Members)
+        {
+            <tr>
+                <td>@m.MemberId</td>
+                <td>@m.MemberName</td>
+                <td>@m.ExpiryDate.ToShortDateString()</td>
+                <td>
+                    @if (m.IsActive())
+                    {
+                        <span class="badge bg-success">Active</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Expired</span>
+                    }
+                </td>
+                <td>@m.DaysUntilExpiry()</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-primary" @onclick="() => CheckIn(m)">Check in</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (!Store.Members.Any())
+{
+    <p class="text-muted">No members registered yet.</p>
+}
+
+@code {
+    // Holds what's typed into the register form
+    private class NewMemberForm
+    {
+        public string MemberId { get; set; } = "";
+        public string MemberName { get; set; } = "";
+        public DateTime ExpiryDate { get; set; } = DateTime.Today.AddMonths(1);
+    }
+
+    // Holds what's typed into the renew form
+    private class RenewForm
+    {
+        public string MemberId { get; set; } = "";
+        public DateTime NewExpiryDate { get; set; } = DateTime.Today.AddMonths(1);
+    }
+
+    private NewMemberForm newMember = new();
+    private RenewForm renewForm = new();
+    private string? message;
+    private bool isError;
+
+    // Creates a new membership (Membership's own constructor does the validation
+    private void RegisterMember()
+    {
+        try
+        {
+            var membership = new Membership(newMember.MemberId, newMember.MemberName, newMember.ExpiryDate);
+            Store.Members.Add(membership);
+            message = $"Registered {membership.MemberName}.";
+            isError = false;
+            newMember = new NewMemberForm();
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            isError = true;
+        }
+    }
+
+    // Checks a member in - CheckIn blocks it if the membership is expired
+    private void CheckIn(Membership membership)
+    {
+        try
+        {
+            var checkIn = new CheckIn(membership);
+            Store.CheckIns.Add(checkIn);
+            message = $"Checked in {membership.MemberName} at {checkIn.CheckInTime:T}.";
+            isError = false;
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            isError = true;
+        }
+    }
+
+    // Extends a member's expiry date - Renew rejects a date that isn't later
+    private void RenewMembership()
+    {
+        var membership = Store.FindMember(renewForm.MemberId);
+        if (membership == null)
+        {
+            message = "Select a member to renew.";
+            isError = true;
+            return;
+        }
+
+        try
+        {
+            membership.Renew(renewForm.NewExpiryDate);
+            message = $"Renewed {membership.MemberName} to {membership.ExpiryDate:d}.";
+            isError = false;
+        }
+        catch (Exception ex)
+        {
+            message = ex.Message;
+            isError = true;
+        }
+    }
+}

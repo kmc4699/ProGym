@@ -1,0 +1,123 @@
+@page "/bookings"
+@inject GymManagement.Web.Services.GymDataStore Store
+@inject GymManagement.BookingService BookingSvc
+@using GymManagement
+
+<PageTitle>Bookings</PageTitle>
+
+<h1>Bookings</h1>
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <div class="alert @(isError ? "alert-danger" : "alert-success")">@message</div>
+}
+
+<!-- books a member into a class -->
+<h3>Book a Class</h3>
+<EditForm Model="bookForm" OnValidSubmit="Book">
+    <div class="mb-2">
+        <label>Member</label>
+        <InputSelect class="form-control" @bind-Value="bookForm.MemberId">
+            <option value="">-- select --</option>
+            @foreach (var m in Store.Members)
+            {
+                <option value="@m.MemberId">@m.MemberName (@m.MemberId)</option>
+            }
+        </InputSelect>
+    </div>
+    <div class="mb-2">
+        <label>Class</label>
+        <InputSelect class="form-control" @bind-Value="bookForm.ClassId">
+            <option value="">-- select --</option>
+            @foreach (var c in Store.Classes)
+            {
+                <option value="@c.Id">@c.Name (@c.AvailableSlots free)</option>
+            }
+        </InputSelect>
+    </div>
+    <button type="submit" class="btn btn-primary">Book</button>
+</EditForm>
+
+<!-- shows every booking with a cancel button -->
+<h3 class="mt-4">All Bookings</h3>
+<table class="table table-striped">
+    <thead>
+        <tr><th>Member</th><th>Class</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+        @foreach (var b in Store.Bookings)
+        {
+            <tr>
+                <td>@b.Member.MemberName</td>
+                <td>@b.FitnessClass.Name</td>
+                <td>
+                    @if (b.IsCancelled)
+                    {
+                        <span class="badge bg-secondary">Cancelled</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">Active</span>
+                    }
+                </td>
+                <td>
+                    @if (!b.IsCancelled)
+                    {
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => Cancel(b)">Cancel</button>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (!Store.Bookings.Any())
+{
+    <p class="text-muted">No bookings yet.</p>
+}
+
+@code {
+    // holds what's picked in the booking form
+    private class BookForm
+    {
+        public string MemberId { get; set; } = "";
+        public string ClassId { get; set; } = "";
+    }
+
+    private BookForm bookForm = new();
+    private string? message;
+    private bool isError;
+
+    // books the class - BookingService returns a result rather than throwing,
+    // so we check .Success here instead of try/catch
+    // (doesn't stop the same member booking the same class twice yet - GAP-01)
+    private void Book()
+    {
+        var member = Store.FindMember(bookForm.MemberId);
+        var fitnessClass = Store.FindClass(bookForm.ClassId);
+
+        if (member == null || fitnessClass == null)
+        {
+            message = "Select both a member and a class.";
+            isError = true;
+            return;
+        }
+
+        var result = BookingSvc.BookClass(member, fitnessClass);
+        message = result.Message;
+        isError = !result.Success;
+
+        if (result.Success && result.Booking != null)
+        {
+            Store.Bookings.Add(result.Booking);
+        }
+    }
+
+    // cancels a booking and frees the class slot back up
+    private void Cancel(Booking booking)
+    {
+        var result = BookingSvc.CancelBooking(booking);
+        message = result.Message;
+        isError = !result.Success;
+    }
+}

@@ -7,7 +7,7 @@ namespace GymManagement.Tests
     [TestClass]
     public class CheckInTests
     {
-        // Should be able to check in with an active membership
+        // An active membership should allow the member to check in.
         [TestMethod]
         public void CheckIn_ActiveMembership_Succeeds()
         {
@@ -16,7 +16,7 @@ namespace GymManagement.Tests
             Assert.AreEqual("M1", checkIn.MemberId);
         }
 
-        // Expired membership should block the check-in
+        // An expired membership should prevent the member from checking in.
         [TestMethod]
         public void CheckIn_ExpiredMembership_ThrowsException()
         {
@@ -27,11 +27,43 @@ namespace GymManagement.Tests
             Assert.ThrowsExactly<InvalidOperationException>(() => new CheckIn(membership));
         }
 
-        // Check-in shouldn't work without a membership at all
+        // A null membership should not allow a check-in.
         [TestMethod]
         public void CheckIn_NullMembership_ThrowsException()
         {
-            Assert.ThrowsExactly<ArgumentNullException>(() => new CheckIn(null!));
+            Assert.ThrowsExactly<ArgumentNullException>(() => new CheckIn((Membership)null!));
+        }
+
+        // FR13: A valid booking should allow the member to check in.
+        [TestMethod]
+        public void CheckIn_FromValidBooking_Succeeds()
+        {
+            var membership = new Membership("M1", "Jane Doe", DateTime.Now.AddDays(30));
+            var fitnessClass = new FitnessClass("C1", "Yoga", DateTime.Now.AddDays(1), 5);
+            var booking = new Booking(membership, fitnessClass);
+
+            var checkIn = new CheckIn(booking);
+
+            Assert.AreEqual("M1", checkIn.MemberId);
+        }
+
+        // FR13: A cancelled booking should not allow the member to check in.
+        [TestMethod]
+        public void CheckIn_FromCancelledBooking_ThrowsException()
+        {
+            var membership = new Membership("M1", "Jane Doe", DateTime.Now.AddDays(30));
+            var fitnessClass = new FitnessClass("C1", "Yoga", DateTime.Now.AddDays(1), 5);
+            var booking = new Booking(membership, fitnessClass);
+            booking.Cancel();
+
+            Assert.ThrowsExactly<InvalidOperationException>(() => new CheckIn(booking));
+        }
+
+        // FR13: A null booking should not be allowed.
+        [TestMethod]
+        public void CheckIn_NullBooking_ThrowsException()
+        {
+            Assert.ThrowsExactly<ArgumentNullException>(() => new CheckIn((Booking)null!));
         }
     }
 }
