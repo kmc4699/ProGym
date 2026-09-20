@@ -228,6 +228,34 @@ namespace GymManagement.Tests
 
         }
 
-    }
+    
+
+        // FR7: a class whose start time has already passed must not accept bookings.
+        [TestMethod]
+        public void BookClass_PastStartTime_ReturnsFailure()
+        {
+            var service = new BookingService();
+            var pastClass = new FitnessClass("C002", "Morning Yoga", DateTime.Now.AddHours(-1), 5);
+
+            var result = service.BookClass(ActiveMember(), pastClass);
+
+            Assert.IsFalse(result.Success);
+            Assert.IsTrue(result.Message.Contains("already started"));
+            Assert.AreEqual(0, pastClass.BookedCount);
+        }
+
+        // FR7: a class scheduled for the future must still succeed as before.
+        [TestMethod]
+        public void BookClass_FutureStartTime_ReturnsSuccess()
+        {
+            var service = new BookingService();
+            var futureClass = new FitnessClass("C003", "Evening Spin", DateTime.Now.AddHours(2), 5);
+
+            var result = service.BookClass(ActiveMember(), futureClass);
+
+            Assert.IsTrue(result.Success);
+            Assert.AreEqual(1, futureClass.BookedCount);
+        }
+}
 
 }
