@@ -10,11 +10,36 @@ builder.Services.AddRazorComponents()
 
 // Shared app services - singletons so every page sees the same data
 // and calls the same booking / reporting logic.
-builder.Services.AddSingleton<GymDataStore>();
+builder.Services.AddSingleton<PersistenceService>(sp =>
+{
+    var path = Path.Combine(AppContext.BaseDirectory, "progym-data.json");
+    var logger = sp.GetService<ILogger<PersistenceService>>();
+    return new PersistenceService(path, logger);
+});
+builder.Services.AddSingleton<GymDataStore>(sp =>
+{
+    var store = new GymDataStore();
+    sp.GetRequiredService<PersistenceService>().LoadInto(store);
+    return store;
+});
 builder.Services.AddSingleton<BookingService>();
 builder.Services.AddSingleton<ReportingService>();
 
 var app = builder.Build();
+
+// Save state to disk when the app shuts down gracefully.
+var lifetime = app.Services.GetRequiredService<IHostApplicationLifetime>();
+lifetime.ApplicationStopping.Register(() =>
+{
+    var persistence = app.Services.GetRequiredService<PersistenceService>();
+    var store = app.Services.GetRequiredService<GymDataStore>();
+    try { persistence.Save(store); }
+    catch (Exception ex)
+    {
+        app.Services.GetService<ILogger<Program>>()?
+            .LogError(ex, "Failed to save GymDataStore on shutdown");
+    }
+});
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
