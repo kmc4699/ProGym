@@ -1,5 +1,6 @@
 @page "/classes"
 @inject GymManagement.Web.Services.GymDataStore Store
+@inject GymManagement.Web.Services.PersistenceService Persistence
 @using GymManagement
 
 <PageTitle>Fitness Classes</PageTitle>
@@ -75,6 +76,7 @@
         {
             var fitnessClass = new FitnessClass(newClass.Id, newClass.Name, newClass.StartTime, newClass.Capacity);
             Store.Classes.Add(fitnessClass);
+            Persistence.Save(Store);
             message = $"Added class {fitnessClass.Name}.";
             isError = false;
             newClass = new NewClassForm();
