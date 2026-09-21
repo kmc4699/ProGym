@@ -1,5 +1,6 @@
 ﻿@page "/members"
 @inject GymManagement.Web.Services.GymDataStore Store
+@inject GymManagement.Web.Services.PersistenceService Persistence
 @using GymManagement
 
 <PageTitle>Members</PageTitle>
@@ -129,6 +130,7 @@
 
             var membership = new Membership(newMember.MemberId, newMember.MemberName, newMember.ExpiryDate);
             Store.Members.Add(membership);
+            Persistence.Save(Store);
             message = $"Registered {membership.MemberName}.";
             isError = false;
             newMember = new NewMemberForm();
@@ -147,6 +149,7 @@
         {
             var checkIn = new CheckIn(membership);
             Store.CheckIns.Add(checkIn);
+            Persistence.Save(Store);
             message = $"Checked in {membership.MemberName} at {checkIn.CheckInTime:T}.";
             isError = false;
         }
@@ -171,6 +174,7 @@
         try
         {
             membership.Renew(renewForm.NewExpiryDate);
+            Persistence.Save(Store);
             message = $"Renewed {membership.MemberName} to {membership.ExpiryDate:d}.";
             isError = false;
         }

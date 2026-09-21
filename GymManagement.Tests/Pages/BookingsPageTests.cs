@@ -18,9 +18,13 @@ public class BookingsPageTests
         // seed a member so the dropdown has a real option
         store.Members.Add(new Membership("M001", "Aroha Smith", DateTime.Today.AddMonths(6)));
 
+        // persistence points at a unique temp file so tests don't collide
+        var tempFile = Path.Combine(Path.GetTempPath(), $"progym-bunit-{Guid.NewGuid():N}.json");
+
         var ctx = new Bunit.TestContext();
         ctx.Services.AddSingleton(store);
         ctx.Services.AddSingleton<BookingService>();
+        ctx.Services.AddSingleton(new PersistenceService(tempFile));
         return (ctx, store);
     }
 
