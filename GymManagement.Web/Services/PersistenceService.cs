@@ -3,13 +3,14 @@ using GymManagement;
 
 namespace GymManagement.Web.Services;
 
-// Saves and loads the GymDataStore to a JSON file so data survives an app restart.
-// Uses simple DTOs internally because the domain classes have get-only properties
-// and constructor validation that the JsonSerializer can't drive directly.
+// Saves and loads the GymDataStore as a JSON file so the data
+// is still available after the application is restarted.
+// DTOs are used because the domain classes have get-only properties
+// and validation in their constructors.
 //
-// Known limitation: memberships whose expiry date is now in the past can't be
-// reconstructed (Membership's constructor rejects a past expiry date). We skip
-// those on load and log a warning, and this is documented in the final report.
+// Known limitation: memberships with an expiry date in the past
+// cannot be loaded because the Membership constructor rejects them.
+// These memberships are skipped and a warning is logged.
 public class PersistenceService
 {
     private readonly string _filePath;
@@ -28,7 +29,7 @@ public class PersistenceService
 
     public string FilePath => _filePath;
 
-    // Serialises the current state of the given store to disk.
+    // Saves the current data in the store to the JSON file.
     public void Save(GymDataStore store)
     {
         var dto = ToDto(store);
@@ -42,9 +43,9 @@ public class PersistenceService
         _logger?.LogInformation("Persisted store to {Path}", _filePath);
     }
 
-    // Loads any previously saved state into the given store. Returns true if a
-    // save file existed and was read, false otherwise. Existing seeded data
-    // is only replaced when a file is found.
+    // Loads saved data into the store.
+    // Returns true if a save file was found and loaded successfully.
+    // If no file exists, the existing seeded data is kept.
     public bool LoadInto(GymDataStore store)
     {
         if (!File.Exists(_filePath))
@@ -66,7 +67,7 @@ public class PersistenceService
         store.Bookings.Clear();
         store.CheckIns.Clear();
 
-        // Members: skip any whose expiry is now in the past (see class comment).
+        // Skip members whose expiry date has already passed.
         var today = DateTime.Today;
         foreach (var m in dto.Members ?? new())
         {
@@ -79,7 +80,8 @@ public class PersistenceService
             store.Members.Add(new Membership(m.MemberId, m.MemberName, m.ExpiryDate));
         }
 
-        // Classes: keep BookedCount by calling ReserveSlot N times after construction.
+        // Recreate the classes and restore their booked count.
+        // ReserveSlot is called for each existing booking.
         var classesById = new Dictionary<string, FitnessClass>();
         foreach (var c in dto.Classes ?? new())
         {
@@ -90,7 +92,7 @@ public class PersistenceService
             classesById[c.Id] = fitnessClass;
         }
 
-        // Bookings: only restore ones whose member and class both survived.
+        // Only restore bookings where the member and class still exist.
         var membersById = store.Members.ToDictionary(m => m.MemberId);
         foreach (var b in dto.Bookings ?? new())
         {
@@ -103,11 +105,11 @@ public class PersistenceService
             store.Bookings.Add(booking);
         }
 
-        // Check-ins: reconstruct via Membership overload (simpler and always valid).
+        // Restore check-ins and keep their original ClassId.
         foreach (var ci in dto.CheckIns ?? new())
         {
             if (!membersById.TryGetValue(ci.MemberId, out var member)) continue;
-            store.CheckIns.Add(new CheckIn(member, ci.Status));
+            store.CheckIns.Add(CheckIn.Restore(ci.MemberId, ci.ClassId, ci.CheckInTime, ci.Status));
         }
 
         _logger?.LogInformation("Loaded store from {Path}", _filePath);
@@ -126,11 +128,11 @@ public class PersistenceService
             .Select(b => new BookingDto(b.Member.MemberId, b.FitnessClass.Id, b.IsCancelled))
             .ToList(),
         CheckIns = store.CheckIns
-            .Select(c => new CheckInDto(c.MemberId, c.CheckInTime, c.Status))
+            .Select(c => new CheckInDto(c.MemberId, c.ClassId, c.CheckInTime, c.Status))
             .ToList(),
     };
 
-    // -------- Internal DTO shapes --------
+    // Internal DTO shapes
     private class StoreDto
     {
         public List<MemberDto> Members { get; set; } = new();
@@ -142,5 +144,6 @@ public class PersistenceService
     private record MemberDto(string MemberId, string MemberName, DateTime ExpiryDate);
     private record ClassDto(string Id, string Name, DateTime StartTime, int Capacity, int BookedCount);
     private record BookingDto(string MemberId, string ClassId, bool IsCancelled);
-    private record CheckInDto(string MemberId, DateTime CheckInTime, AttendanceStatus Status);
+    private record CheckInDto(string MemberId, string? ClassId, DateTime CheckInTime, AttendanceStatus Status);
 }
+
