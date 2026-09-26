@@ -13,6 +13,7 @@ namespace GymManagement
     public class CheckIn
     {
         public string MemberId { get; }        // ID of the member checking in
+        public string? ClassId { get; }        // which class this check-in relates to, if known
         public DateTime CheckInTime { get; }   // Time the member checked in
         public AttendanceStatus Status { get; }
 
@@ -27,6 +28,7 @@ namespace GymManagement
                 throw new InvalidOperationException("Cannot check in: membership has expired.");
 
             MemberId = membership.MemberId;
+            ClassId = null;
             CheckInTime = DateTime.Now;
             Status = status;
         }
@@ -45,8 +47,31 @@ namespace GymManagement
                 throw new InvalidOperationException("Cannot check in: membership has expired.");
 
             MemberId = booking.Member.MemberId;
+            ClassId = booking.FitnessClass.Id;
             CheckInTime = DateTime.Now;
             Status = status;
+        }
+
+        // Used to restore a CheckIn from saved data.
+        // The normal validation is skipped because the CheckIn
+        // was already validated when it was originally created.
+        private CheckIn(string memberId, string? classId, DateTime checkInTime, AttendanceStatus status)
+        {
+            MemberId = memberId;
+            ClassId = classId;
+            CheckInTime = checkInTime;
+            Status = status;
+        }
+
+        // Creates a CheckIn from previously saved data.
+        // This is used when loading CheckIns from storage instead
+        // of creating a new check-in through the normal constructors.
+        public static CheckIn Restore(string memberId, string? classId, DateTime checkInTime, AttendanceStatus status)
+        {
+            if (string.IsNullOrWhiteSpace(memberId))
+                throw new ArgumentException("Member ID is required.");
+
+            return new CheckIn(memberId, classId, checkInTime, status);
         }
     }
 }
