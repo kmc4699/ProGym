@@ -88,5 +88,17 @@ namespace GymManagement.Tests
 
             Assert.AreEqual(originalExpiry, membership.ExpiryDate);
         }
+
+        // DaysUntilExpiry should return a negative number once the membership has expired.
+        [TestMethod]
+        public void Membership_DaysUntilExpiry_WhenExpired_ReturnsNegativeNumber()
+        {
+            var clock = new FakeClock { Today = DateTime.Today };
+            var membership = new Membership("M1", "Jane Doe", DateTime.Today.AddDays(5), clock);
+
+            clock.Today = DateTime.Today.AddDays(15);
+
+            Assert.AreEqual(-10, membership.DaysUntilExpiry());
+        }
     }
 }
