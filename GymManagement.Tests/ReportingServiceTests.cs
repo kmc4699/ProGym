@@ -81,5 +81,66 @@ namespace GymManagement.Tests
             var reporting = new ReportingService();
             Assert.Throws<ArgumentNullException>(() => reporting.GetTotalCheckIns(null!));
         }
-    }
+    
+        // Attendance breakdown: counts Attended vs NoShow per class using ClassId.
+        [TestMethod]
+        public void GetAttendanceByClass_MixedStatuses_CountsCorrectlyPerClass()
+        {
+            var reporting = new ReportingService();
+            var member = Active("M1");
+            var yoga = new FitnessClass("C1", "Yoga", DateTime.Today.AddDays(1), 10);
+            var spin = new FitnessClass("C2", "Spin", DateTime.Today.AddDays(1), 5);
+
+            var yogaBooking = new Booking(member, yoga);
+            var spinBooking = new Booking(member, spin);
+
+            var checkIns = new List<CheckIn>
+            {
+                new CheckIn(yogaBooking, AttendanceStatus.Attended),
+                new CheckIn(yogaBooking, AttendanceStatus.NoShow),
+                new CheckIn(spinBooking, AttendanceStatus.Attended)
+            };
+
+            var result = reporting.GetAttendanceByClass(new[] { yoga, spin }, checkIns);
+
+            Assert.AreEqual(2, result.Count);
+            var yogaRow = result.First(a => a.ClassId == "C1");
+            Assert.AreEqual(1, yogaRow.AttendedCount);
+            Assert.AreEqual(1, yogaRow.NoShowCount);
+            Assert.AreEqual(2, yogaRow.TotalCheckIns);
+            var spinRow = result.First(a => a.ClassId == "C2");
+            Assert.AreEqual(1, spinRow.AttendedCount);
+            Assert.AreEqual(0, spinRow.NoShowCount);
+        }
+
+        // Classes with no check-ins should still appear in the result with zero counts.
+        [TestMethod]
+        public void GetAttendanceByClass_NoCheckIns_ReturnsZerosPerClass()
+        {
+            var reporting = new ReportingService();
+            var yoga = new FitnessClass("C1", "Yoga", DateTime.Today.AddDays(1), 10);
+
+            var result = reporting.GetAttendanceByClass(new[] { yoga }, new List<CheckIn>());
+
+            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(0, result[0].AttendedCount);
+            Assert.AreEqual(0, result[0].NoShowCount);
+        }
+
+        [TestMethod]
+        public void GetAttendanceByClass_NullClasses_ThrowsException()
+        {
+            var reporting = new ReportingService();
+            Assert.Throws<ArgumentNullException>(
+                () => reporting.GetAttendanceByClass(null!, new List<CheckIn>()));
+        }
+
+        [TestMethod]
+        public void GetAttendanceByClass_NullCheckIns_ThrowsException()
+        {
+            var reporting = new ReportingService();
+            Assert.Throws<ArgumentNullException>(
+                () => reporting.GetAttendanceByClass(new List<FitnessClass>(), null!));
+        }
+}
 }
