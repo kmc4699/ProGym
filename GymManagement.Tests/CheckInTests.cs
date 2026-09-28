@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using GymManagement;
 
@@ -85,5 +85,36 @@ namespace GymManagement.Tests
 
             Assert.AreEqual(AttendanceStatus.NoShow, checkIn.Status);
         }
-    }
+    
+        // FR13 hardening: the same member cannot check in for the same class twice
+        [TestMethod]
+        public void CheckIn_DuplicateForSameBooking_ThrowsException()
+        {
+            var membership = new Membership("M1", "Jane Doe", DateTime.Now.AddDays(30));
+            var fitnessClass = new FitnessClass("C1", "Yoga", DateTime.Now.AddDays(1), 5);
+            var booking = new Booking(membership, fitnessClass);
+
+            var existing = new List<CheckIn> { new CheckIn(booking) };
+
+            Assert.ThrowsExactly<InvalidOperationException>(
+                () => new CheckIn(booking, existing));
+        }
+
+        // FR13: different bookings for different classes should still work
+        [TestMethod]
+        public void CheckIn_SameMemberDifferentClass_Succeeds()
+        {
+            var membership = new Membership("M1", "Jane Doe", DateTime.Now.AddDays(30));
+            var yoga = new FitnessClass("C1", "Yoga", DateTime.Now.AddDays(1), 5);
+            var spin = new FitnessClass("C2", "Spin", DateTime.Now.AddDays(1), 5);
+            var yogaBooking = new Booking(membership, yoga);
+            var spinBooking = new Booking(membership, spin);
+
+            var existing = new List<CheckIn> { new CheckIn(yogaBooking) };
+
+            var spinCheckIn = new CheckIn(spinBooking, existing);
+
+            Assert.AreEqual("C2", spinCheckIn.ClassId);
+        }
+}
 }

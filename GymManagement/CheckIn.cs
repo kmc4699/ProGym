@@ -52,6 +52,25 @@ namespace GymManagement
             Status = status;
         }
 
+        // FR13 hardening: same as above, but also rejects a duplicate check-in
+        // for the same member and class. Prevents recording the same attendance twice.
+        public CheckIn(Booking booking, IEnumerable<CheckIn> existingCheckIns,
+            AttendanceStatus status = AttendanceStatus.Attended)
+            : this(booking, status)
+        {
+            if (existingCheckIns == null)
+                throw new ArgumentNullException(nameof(existingCheckIns));
+
+            foreach (var existing in existingCheckIns)
+            {
+                if (existing.MemberId == MemberId && existing.ClassId == ClassId)
+                {
+                    throw new InvalidOperationException(
+                        "Cannot check in: this member has already been checked in for this class.");
+                }
+            }
+        }
+
         // Used to restore a CheckIn from saved data.
         // The normal validation is skipped because the CheckIn
         // was already validated when it was originally created.
