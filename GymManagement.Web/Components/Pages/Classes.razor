@@ -36,12 +36,38 @@
 
 <!-- shows every class with how full it is -->
 <h3 class="mt-4">All Classes</h3>
+
+<!-- filter and search controls -->
+<div class="row mb-2">
+    <div class="col-md-6">
+        <input class="form-control" type="text" placeholder="Filter by name..."
+               @bind="filterText" @bind:event="oninput" />
+    </div>
+    <div class="col-md-6 d-flex align-items-center">
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="hidePastCheckbox"
+                   @bind="hidePastClasses" />
+            <label class="form-check-label" for="hidePastCheckbox">
+                Hide classes that have already started
+            </label>
+        </div>
+    </div>
+</div>
+
+@{
+    var visibleClasses = Store.Classes
+        .Where(c => string.IsNullOrWhiteSpace(filterText)
+                    || c.Name.Contains(filterText, StringComparison.OrdinalIgnoreCase))
+        .Where(c => !hidePastClasses || c.StartTime >= DateTime.Now)
+        .ToList();
+}
+
 <table class="table table-striped">
     <thead>
         <tr><th>ID</th><th>Name</th><th>Start</th><th>Booked</th><th>Capacity</th><th>Available</th></tr>
     </thead>
     <tbody>
-        @foreach (var c in Store.Classes)
+        @foreach (var c in visibleClasses)
         {
             <tr>
                 <td>@c.Id</td>
@@ -54,6 +80,11 @@
         }
     </tbody>
 </table>
+
+@if (Store.Classes.Any() && !visibleClasses.Any())
+{
+    <p class="text-muted">No classes match your filter.</p>
+}
 
 @code {
     // holds what's typed into the add-class form
@@ -68,6 +99,11 @@
     private NewClassForm newClass = new();
     private string? message;
     private bool isError;
+
+    // Filter controls: substring match on class name (case-insensitive) and
+    // an optional flag to hide classes whose StartTime is in the past.
+    private string filterText = "";
+    private bool hidePastClasses = false;
 
     // creates a class - FitnessClass's own constructor does the validation
     private void AddClass()
