@@ -71,13 +71,23 @@
                 <td>@m.MemberName</td>
                 <td>@m.ExpiryDate.ToShortDateString()</td>
                 <td>
-                    @if (m.IsActive())
+                    @{
+                        var days = m.DaysUntilExpiry();
+                    }
+                    @if (!m.IsActive())
                     {
-                        <span class="badge bg-success">Active</span>
+                        <span class="badge bg-danger" title="Membership has expired">Expired</span>
+                    }
+                    else if (days <= ExpiryWarningDays)
+                    {
+                        <span class="badge bg-warning text-dark"
+                              title="Membership expires within @ExpiryWarningDays days">
+                            Expiring soon
+                        </span>
                     }
                     else
                     {
-                        <span class="badge bg-danger">Expired</span>
+                        <span class="badge bg-success">Active</span>
                     }
                 </td>
                 <td>@m.DaysUntilExpiry()</td>
@@ -95,6 +105,9 @@
 }
 
 @code {
+    // Show the "Expiring soon" warning when a membership has this many days or fewer left.
+    private const int ExpiryWarningDays = 14;
+
     // Holds what's typed into the register form
     private class NewMemberForm
     {
