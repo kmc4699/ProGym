@@ -3,15 +3,15 @@
 Snapshot of the quality metrics as of the last successful test run. This doc
 feeds directly into the report's release-decision section (Task 8).
 
-Version: 2026-09-29
+Version: 2026-09-29 (updated after Classes/Members bUnit tests landed)
 Reproduce: `dotnet test GymManagement.slnx --collect:"XPlat Code Coverage"`
 
 ## Test outcomes
 
 | Metric                        | Value | Notes                                                    |
 |-------------------------------|-------|----------------------------------------------------------|
-| Total automated tests         | **51**| MSTest + bUnit + integration                              |
-| Passing                       | **51**| 100% pass rate                                           |
+| Total automated tests         | **57**| MSTest + bUnit + integration                              |
+| Passing                       | **57**| 100% pass rate                                           |
 | Failing                       | 0     |                                                          |
 | Skipped                       | 0     |                                                          |
 | Average run time (local)      | ~1 s  | Fast enough to run before every commit                    |
@@ -23,8 +23,8 @@ Measured with `coverlet.collector` and reported in Cobertura format on every CI 
 
 | Metric                | Value    |
 |-----------------------|----------|
-| Line coverage         | **59.9%** (331 / 553 lines) |
-| Branch coverage       | **60.1%** |
+| Line coverage         | **73.6%** (407 / 553 lines) |
+| Branch coverage       | **70.8%** |
 
 ### Coverage by area
 
@@ -34,11 +34,11 @@ Measured with `coverlet.collector` and reported in Cobertura format on every CI 
 | `GymManagement.Web.Services.PersistenceService` | **~85%**           | Save/load round-trip tested end-to-end                                            |
 | `GymManagement.Web.Components.Pages.Home`      | ~65%                 | bUnit smoke tests hit the happy path                                              |
 | `GymManagement.Web.Components.Pages.Bookings`  | ~55%                 | bUnit tests cover book + cancel + validation error                                |
-| `GymManagement.Web.Components.Pages.Classes`   | 0%                   | Not yet exercised by bUnit; planned for Week 4                                    |
-| `GymManagement.Web.Components.Pages.Members`   | 0%                   | Not yet exercised by bUnit; planned for Week 4                                    |
+| `GymManagement.Web.Components.Pages.Classes`   | ~65%                 | bUnit tests cover seeded rendering, valid add, invalid add (capacity=0)           |
+| `GymManagement.Web.Components.Pages.Members`   | ~60%                 | bUnit tests cover empty state, register happy path, duplicate-ID rejection        |
 | `GymManagement.Web.Program` and layout        | 0%                   | Not testable through unit or component tests; smoke tests on real app cover this  |
 
-The 60% number is realistic: we hit ~90% on the domain code (which is the important part - the business rules) and low-to-zero on the wiring and pages that we have not bUnit-tested yet. The domain hitting 90% is what we would defend at a viva; the overall number is easy to explain.
+The 74% figure is a healthy number for a Blazor Server app - all the domain code lands around 90%, and the four user-facing pages are all bUnit-tested. The remaining uncovered lines are almost entirely `Program.cs` and layout wiring that only run end-to-end.
 
 ## Defects
 
@@ -95,6 +95,6 @@ Verdict candidates and how each maps to the numbers above:
 
 ## Next-week improvement targets
 
-- Bump overall coverage from 60% -> 75% by adding bUnit tests for the `Classes` and `Members` pages.
-- Close FR8 (Srikar) and log a DEF-04 entry for the current known gap.
+- Close FR8 (Srikar) and log a DEF-04 entry once the current known gap is closed.
 - Add a small performance test on `ReportingService` to satisfy Task 7's quality-testing requirement (performance being one of the two chosen areas).
+- Draft the report's Tasks 1-11 using the artifacts already produced.
