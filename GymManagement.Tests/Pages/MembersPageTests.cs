@@ -71,4 +71,37 @@ public class MembersPageTests
         Assert.AreEqual(1, store.Members.Count);
         Assert.IsTrue(page.Find("div.alert-danger").TextContent.Contains("already registered"));
     }
+
+    // Feature F2: expiry warning badges based on DaysUntilExpiry.
+    [TestMethod]
+    public void Members_ExpiringSoonMember_ShowsYellowExpiringSoonBadge()
+    {
+        var (ctx, store) = CreateContext();
+        using var _ctx = ctx;
+
+        // 5 days until expiry -> below the 14-day warning threshold
+        store.Members.Add(new Membership("M1", "Soon Expiring", DateTime.Today.AddDays(5)));
+        var page = ctx.RenderComponent<Members>();
+
+        var row = page.FindAll("table tbody tr").First(r => r.TextContent.Contains("Soon Expiring"));
+        var badge = row.QuerySelector("span.bg-warning");
+        Assert.IsNotNull(badge);
+        Assert.IsTrue(badge!.TextContent.Contains("Expiring soon"));
+    }
+
+    [TestMethod]
+    public void Members_ActiveMemberWithLongExpiry_ShowsGreenActiveBadge()
+    {
+        var (ctx, store) = CreateContext();
+        using var _ctx = ctx;
+
+        // 6 months out -> well above the warning threshold
+        store.Members.Add(new Membership("M1", "Safe Member", DateTime.Today.AddMonths(6)));
+        var page = ctx.RenderComponent<Members>();
+
+        var row = page.FindAll("table tbody tr").First(r => r.TextContent.Contains("Safe Member"));
+        var greenBadge = row.QuerySelector("span.bg-success");
+        Assert.IsNotNull(greenBadge);
+        Assert.AreEqual("Active", greenBadge!.TextContent.Trim());
+    }
 }
