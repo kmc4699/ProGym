@@ -76,4 +76,59 @@ public class ClassesPageTests
         Assert.AreEqual(classesBefore, store.Classes.Count);
         Assert.IsNotNull(page.Find("div.alert-danger"));
     }
+
+    // Feature F3: filter box narrows the visible class list live.
+    [TestMethod]
+    public void Classes_FilterByName_ShowsOnlyMatchingRows()
+    {
+        var (ctx, _) = CreateContext();
+        using var _ctx = ctx;
+        var page = ctx.RenderComponent<Classes>();
+
+        // Both seeded classes are visible before filtering.
+        Assert.AreEqual(2, page.FindAll("table tbody tr").Count);
+
+        // Type "spin" - only Spin should remain.
+        page.Find("input[type=text]").Input("spin");
+
+        var rows = page.FindAll("table tbody tr");
+        Assert.AreEqual(1, rows.Count);
+        Assert.IsTrue(rows[0].TextContent.Contains("Spin"));
+    }
+
+    // Feature F3: no-match message when the filter excludes everything.
+    [TestMethod]
+    public void Classes_FilterWithNoMatches_ShowsNoResultsMessage()
+    {
+        var (ctx, _) = CreateContext();
+        using var _ctx = ctx;
+        var page = ctx.RenderComponent<Classes>();
+
+        page.Find("input[type=text]").Input("zzzzz");
+
+        Assert.AreEqual(0, page.FindAll("table tbody tr").Count);
+        Assert.IsTrue(page.Markup.Contains("No classes match your filter"));
+    }
+
+    // Feature F3: the "hide past classes" checkbox removes classes with a past start time.
+    [TestMethod]
+    public void Classes_HidePastCheckbox_ExcludesClassesInThePast()
+    {
+        var (ctx, store) = CreateContext();
+        using var _ctx = ctx;
+
+        // Add a class that already started (past start time)
+        store.Classes.Add(new FitnessClass("C99", "Yesterday Class",
+            DateTime.Now.AddHours(-2), 5));
+        var page = ctx.RenderComponent<Classes>();
+
+        Assert.AreEqual(3, page.FindAll("table tbody tr").Count); // 2 seeded + 1 past
+
+        // Tick the "hide past classes" checkbox
+        page.Find("input[type=checkbox]").Change(true);
+
+        var rows = page.FindAll("table tbody tr");
+        Assert.AreEqual(2, rows.Count);
+        Assert.IsFalse(page.Markup.Contains("Yesterday Class"));
+    }
 }
