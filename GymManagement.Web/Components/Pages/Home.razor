@@ -11,6 +11,8 @@
     var summary = Reporting.GetMembershipSummary(Store.Members);
     var utilisation = Reporting.GetClassUtilisation(Store.Classes);
     var totalCheckIns = Reporting.GetTotalCheckIns(Store.CheckIns);
+    var attendance = Reporting.GetAttendanceByClass(Store.Classes, Store.CheckIns)
+        .ToDictionary(a => a.ClassName);
 }
 
 <div class="row">
@@ -40,7 +42,7 @@
     </div>
 </div>
 
-<h3>Class Utilisation</h3>
+<h3>Class Utilisation and Attendance</h3>
 <table class="table table-striped">
     <thead>
         <tr>
@@ -48,16 +50,22 @@
             <th>Booked</th>
             <th>Capacity</th>
             <th>Available</th>
+            <th>Attended</th>
+            <th>No-Show</th>
         </tr>
     </thead>
     <tbody>
         @foreach (var u in utilisation)
         {
+            var attended = attendance.TryGetValue(u.ClassName, out var a) ? a.AttendedCount : 0;
+            var noShow   = attendance.TryGetValue(u.ClassName, out var b) ? b.NoShowCount   : 0;
             <tr>
                 <td>@u.ClassName</td>
                 <td>@u.Booked</td>
                 <td>@u.Capacity</td>
                 <td>@u.AvailableSlots</td>
+                <td><span class="badge bg-success">@attended</span></td>
+                <td><span class="badge bg-warning text-dark">@noShow</span></td>
             </tr>
         }
     </tbody>

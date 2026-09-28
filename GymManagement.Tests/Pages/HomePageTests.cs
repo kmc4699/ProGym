@@ -60,4 +60,29 @@ public class HomePageTests
         Assert.IsTrue(page.Markup.Contains("Yoga"));
         Assert.IsTrue(page.Markup.Contains("Spin"));
     }
+
+    [TestMethod]
+    public void Home_ShowsAttendedAndNoShowColumnsWithBadges()
+    {
+        var store = new GymDataStore();
+        var member = new Membership("M1", "Test Member", DateTime.Today.AddMonths(3));
+        store.Members.Add(member);
+
+        var yoga = store.FindClass("C1")!;      // seeded Yoga
+        var booking = new Booking(member, yoga);
+        store.Bookings.Add(booking);
+        store.CheckIns.Add(new CheckIn(booking, AttendanceStatus.Attended));
+        store.CheckIns.Add(new CheckIn(booking, AttendanceStatus.NoShow));
+
+        using var ctx = CreateContext(store);
+        var page = ctx.RenderComponent<Home>();
+
+        // The heading updated to include Attendance
+        Assert.IsTrue(page.Markup.Contains("Utilisation and Attendance"));
+        // Yoga's row should have an attended=1 badge and no-show=1 badge
+        var yogaRow = page.FindAll("table tbody tr")
+            .First(r => r.TextContent.Contains("Yoga"));
+        Assert.IsTrue(yogaRow.QuerySelector("span.bg-success")!.TextContent.Trim() == "1");
+        Assert.IsTrue(yogaRow.QuerySelector("span.bg-warning")!.TextContent.Trim() == "1");
+    }
 }
