@@ -12,12 +12,12 @@ namespace GymManagement.Tests.Pages;
 [TestClass]
 public class MembersPageTests
 {
-    private static (Bunit.TestContext ctx, GymDataStore store) CreateContext()
+    private static (Bunit.BunitContext ctx, GymDataStore store) CreateContext()
     {
         var store = new GymDataStore();
         var tempFile = Path.Combine(Path.GetTempPath(), $"progym-members-{Guid.NewGuid():N}.json");
 
-        var ctx = new Bunit.TestContext();
+        var ctx = new Bunit.BunitContext();
         ctx.Services.AddSingleton(store);
         ctx.Services.AddSingleton(new PersistenceService(tempFile));
         return (ctx, store);
@@ -29,7 +29,7 @@ public class MembersPageTests
         var (ctx, _) = CreateContext();
         using var _ctx = ctx;
 
-        var page = ctx.RenderComponent<Members>();
+        var page = ctx.Render<Members>();
 
         Assert.IsTrue(page.Markup.Contains("No members registered"));
     }
@@ -39,7 +39,7 @@ public class MembersPageTests
     {
         var (ctx, store) = CreateContext();
         using var _ctx = ctx;
-        var page = ctx.RenderComponent<Members>();
+        var page = ctx.Render<Members>();
 
         // Fill the register form - always re-find the inputs after each change.
         page.FindAll("input")[0].Change("M001");                        // Member ID
@@ -62,7 +62,7 @@ public class MembersPageTests
 
         // Pre-seed a member with the same ID we're about to type
         store.Members.Add(new Membership("M001", "Existing", DateTime.Today.AddMonths(3)));
-        var page = ctx.RenderComponent<Members>();
+        var page = ctx.Render<Members>();
 
         page.FindAll("input")[0].Change("M001");
         page.FindAll("input")[1].Change("Duplicate Attempt");
@@ -81,7 +81,7 @@ public class MembersPageTests
 
         // 5 days until expiry -> below the 14-day warning threshold
         store.Members.Add(new Membership("M1", "Soon Expiring", DateTime.Today.AddDays(5)));
-        var page = ctx.RenderComponent<Members>();
+        var page = ctx.Render<Members>();
 
         var row = page.FindAll("table tbody tr").First(r => r.TextContent.Contains("Soon Expiring"));
         var badge = row.QuerySelector("span.bg-warning");
@@ -97,7 +97,7 @@ public class MembersPageTests
 
         // 6 months out -> well above the warning threshold
         store.Members.Add(new Membership("M1", "Safe Member", DateTime.Today.AddMonths(6)));
-        var page = ctx.RenderComponent<Members>();
+        var page = ctx.Render<Members>();
 
         var row = page.FindAll("table tbody tr").First(r => r.TextContent.Contains("Safe Member"));
         var greenBadge = row.QuerySelector("span.bg-success");
