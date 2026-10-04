@@ -1,6 +1,7 @@
 @page "/bookings"
 @inject GymManagement.Web.Services.GymDataStore Store
 @inject GymManagement.BookingService BookingSvc
+@inject GymManagement.WaitlistService WaitlistSvc
 @inject GymManagement.Web.Services.PersistenceService Persistence
 @using GymManagement
 
@@ -32,12 +33,39 @@
             <option value="">-- select --</option>
             @foreach (var c in Store.Classes)
             {
-                <option value="@c.Id">@c.Name (@c.AvailableSlots free)</option>
+                var waitingHere = Store.Waitlist.Count(w => w.FitnessClass.Id == c.Id);
+                <option value="@c.Id">
+                    @c.Name (@c.AvailableSlots free@(waitingHere > 0 ? $", {waitingHere} waiting" : ""))
+                </option>
             }
         </InputSelect>
     </div>
     <button type="submit" class="btn btn-primary">Book</button>
+    <button type="button" class="btn btn-outline-warning"
+            @onclick="JoinWaitlist">
+        Join Waitlist (if full)
+    </button>
 </EditForm>
+
+@if (Store.Waitlist.Any())
+{
+    <h3 class="mt-4">Waitlist</h3>
+    <table class="table table-sm">
+        <thead>
+            <tr><th>Member</th><th>Class</th><th>Added</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var w in Store.Waitlist.OrderBy(w => w.AddedAt))
+            {
+                <tr>
+                    <td>@w.Member.MemberName</td>
+                    <td>@w.FitnessClass.Name</td>
+                    <td>@w.AddedAt.ToString("g")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
 
 <!-- shows every booking with cancel and check-in buttons -->
 <h3 class="mt-4">All Bookings</h3>
@@ -116,7 +144,8 @@
         }
     }
 
-    // cancels a booking and frees the class slot back up
+    // cancels a booking and frees the class slot back up. If someone's waiting
+    // for this class, they are auto-promoted into the freed slot.
     private void Cancel(Booking booking)
     {
         var result = BookingSvc.CancelBooking(booking);
@@ -124,7 +153,42 @@
         isError = !result.Success;
 
         if (result.Success)
+        {
+            // Try to promote the oldest waitlister for this class.
+            var promote = WaitlistSvc.PromoteNext(booking.FitnessClass, Store.Waitlist);
+            if (promote.Success && promote.PromotedBooking != null)
+            {
+                Store.Bookings.Add(promote.PromotedBooking);
+                message = $"{result.Message} {promote.Message}";
+            }
+
             Persistence.Save(Store);
+        }
+    }
+
+    // Adds the currently selected member to the waitlist for the currently
+    // selected class. Only works when the class is already full.
+    private void JoinWaitlist()
+    {
+        var member = Store.FindMember(bookForm.MemberId);
+        var fitnessClass = Store.FindClass(bookForm.ClassId);
+
+        if (member == null || fitnessClass == null)
+        {
+            message = "Select both a member and a class to join the waitlist.";
+            isError = true;
+            return;
+        }
+
+        var result = WaitlistSvc.Join(member, fitnessClass, Store.Waitlist);
+        message = result.Message;
+        isError = !result.Success;
+
+        if (result.Success && result.Entry != null)
+        {
+            Store.Waitlist.Add(result.Entry);
+            Persistence.Save(Store);
+        }
     }
 
     // checks in a member for their confirmed booking - uses the
