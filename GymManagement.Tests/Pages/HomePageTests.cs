@@ -13,9 +13,9 @@ namespace GymManagement.Tests.Pages;
 [TestClass]
 public class HomePageTests
 {
-    private static Bunit.TestContext CreateContext(GymDataStore store)
+    private static Bunit.BunitContext CreateContext(GymDataStore store)
     {
-        var ctx = new Bunit.TestContext();
+        var ctx = new Bunit.BunitContext();
         ctx.Services.AddSingleton(store);
         ctx.Services.AddSingleton<ReportingService>();
         return ctx;
@@ -26,7 +26,7 @@ public class HomePageTests
     {
         using var ctx = CreateContext(new GymDataStore());
 
-        var page = ctx.RenderComponent<Home>();
+        var page = ctx.Render<Home>();
 
         var heading = page.Find("h1");
         Assert.AreEqual("ProGym Dashboard", heading.TextContent.Trim());
@@ -37,7 +37,7 @@ public class HomePageTests
     {
         using var ctx = CreateContext(new GymDataStore());
 
-        var page = ctx.RenderComponent<Home>();
+        var page = ctx.Render<Home>();
 
         // Both summary numbers should render as 0 when there's no membership data.
         var numbers = page.FindAll("p.card-text");
@@ -53,7 +53,7 @@ public class HomePageTests
         // The default GymDataStore seeds Yoga + Spin.
         using var ctx = CreateContext(new GymDataStore());
 
-        var page = ctx.RenderComponent<Home>();
+        var page = ctx.Render<Home>();
 
         var rows = page.FindAll("table tbody tr");
         Assert.AreEqual(2, rows.Count);
@@ -75,7 +75,7 @@ public class HomePageTests
         store.CheckIns.Add(new CheckIn(booking, AttendanceStatus.NoShow));
 
         using var ctx = CreateContext(store);
-        var page = ctx.RenderComponent<Home>();
+        var page = ctx.Render<Home>();
 
         // The heading updated to include Attendance
         Assert.IsTrue(page.Markup.Contains("Utilisation and Attendance"));

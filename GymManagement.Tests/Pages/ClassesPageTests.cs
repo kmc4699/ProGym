@@ -11,12 +11,12 @@ namespace GymManagement.Tests.Pages;
 [TestClass]
 public class ClassesPageTests
 {
-    private static (Bunit.TestContext ctx, GymDataStore store) CreateContext()
+    private static (Bunit.BunitContext ctx, GymDataStore store) CreateContext()
     {
         var store = new GymDataStore();
         var tempFile = Path.Combine(Path.GetTempPath(), $"progym-classes-{Guid.NewGuid():N}.json");
 
-        var ctx = new Bunit.TestContext();
+        var ctx = new Bunit.BunitContext();
         ctx.Services.AddSingleton(store);
         ctx.Services.AddSingleton(new PersistenceService(tempFile));
         return (ctx, store);
@@ -28,7 +28,7 @@ public class ClassesPageTests
         var (ctx, _) = CreateContext();
         using var _ctx = ctx;
 
-        var page = ctx.RenderComponent<Classes>();
+        var page = ctx.Render<Classes>();
 
         // The seeded Yoga + Spin classes should render as table rows.
         var rows = page.FindAll("table tbody tr");
@@ -42,7 +42,7 @@ public class ClassesPageTests
     {
         var (ctx, store) = CreateContext();
         using var _ctx = ctx;
-        var page = ctx.RenderComponent<Classes>();
+        var page = ctx.Render<Classes>();
 
         page.FindAll("input")[0].Change("C10");                      // Class ID
         page.FindAll("input")[1].Change("Pilates");                  // Name
@@ -63,7 +63,7 @@ public class ClassesPageTests
         var (ctx, store) = CreateContext();
         using var _ctx = ctx;
         int classesBefore = store.Classes.Count;
-        var page = ctx.RenderComponent<Classes>();
+        var page = ctx.Render<Classes>();
 
         page.FindAll("input")[0].Change("C10");
         page.FindAll("input")[1].Change("Broken");
@@ -83,7 +83,7 @@ public class ClassesPageTests
     {
         var (ctx, _) = CreateContext();
         using var _ctx = ctx;
-        var page = ctx.RenderComponent<Classes>();
+        var page = ctx.Render<Classes>();
 
         // Both seeded classes are visible before filtering.
         Assert.AreEqual(2, page.FindAll("table tbody tr").Count);
@@ -102,7 +102,7 @@ public class ClassesPageTests
     {
         var (ctx, _) = CreateContext();
         using var _ctx = ctx;
-        var page = ctx.RenderComponent<Classes>();
+        var page = ctx.Render<Classes>();
 
         page.Find("input[type=text]").Input("zzzzz");
 
@@ -120,7 +120,7 @@ public class ClassesPageTests
         // Add a class that already started (past start time)
         store.Classes.Add(new FitnessClass("C99", "Yesterday Class",
             DateTime.Now.AddHours(-2), 5));
-        var page = ctx.RenderComponent<Classes>();
+        var page = ctx.Render<Classes>();
 
         Assert.AreEqual(3, page.FindAll("table tbody tr").Count); // 2 seeded + 1 past
 

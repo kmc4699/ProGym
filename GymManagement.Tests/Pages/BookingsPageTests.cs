@@ -12,7 +12,7 @@ namespace GymManagement.Tests.Pages;
 [TestClass]
 public class BookingsPageTests
 {
-    private static (Bunit.TestContext ctx, GymDataStore store) CreateContext()
+    private static (Bunit.BunitContext ctx, GymDataStore store) CreateContext()
     {
         var store = new GymDataStore();
         // seed a member so the dropdown has a real option
@@ -21,7 +21,7 @@ public class BookingsPageTests
         // persistence points at a unique temp file so tests don't collide
         var tempFile = Path.Combine(Path.GetTempPath(), $"progym-bunit-{Guid.NewGuid():N}.json");
 
-        var ctx = new Bunit.TestContext();
+        var ctx = new Bunit.BunitContext();
         ctx.Services.AddSingleton(store);
         ctx.Services.AddSingleton<BookingService>();
         ctx.Services.AddSingleton(new PersistenceService(tempFile));
@@ -34,7 +34,7 @@ public class BookingsPageTests
         var (ctx, _) = CreateContext();
         using var _ctx = ctx;
 
-        var page = ctx.RenderComponent<Bookings>();
+        var page = ctx.Render<Bookings>();
 
         Assert.IsTrue(page.Markup.Contains("No bookings yet"));
     }
@@ -44,7 +44,7 @@ public class BookingsPageTests
     {
         var (ctx, store) = CreateContext();
         using var _ctx = ctx;
-        var page = ctx.RenderComponent<Bookings>();
+        var page = ctx.Render<Bookings>();
 
         // The user picks a member and a class. Re-find after each change because
         // Blazor re-renders and the previous event handler ids become stale.
@@ -64,7 +64,7 @@ public class BookingsPageTests
     {
         var (ctx, _) = CreateContext();
         using var _ctx = ctx;
-        var page = ctx.RenderComponent<Bookings>();
+        var page = ctx.Render<Bookings>();
 
         // Submit without touching the dropdowns.
         page.Find("form").Submit();
@@ -78,7 +78,7 @@ public class BookingsPageTests
     {
         var (ctx, store) = CreateContext();
         using var _ctx = ctx;
-        var page = ctx.RenderComponent<Bookings>();
+        var page = ctx.Render<Bookings>();
 
         // Book first (re-find selects after each change to avoid stale handler ids)
         page.FindAll("select")[0].Change("M001");
