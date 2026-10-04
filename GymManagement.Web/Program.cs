@@ -24,6 +24,7 @@ builder.Services.AddSingleton<GymDataStore>(sp =>
 });
 builder.Services.AddSingleton<BookingService>();
 builder.Services.AddSingleton<ReportingService>();
+builder.Services.AddSingleton<WaitlistService>();
 
 var app = builder.Build();
 

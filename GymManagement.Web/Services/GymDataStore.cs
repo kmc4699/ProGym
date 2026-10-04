@@ -26,6 +26,10 @@ namespace GymManagement.Web.Services
 
 
 
+        public List<WaitlistEntry> Waitlist { get; } = new();
+
+
+
         public GymDataStore()
 
         {

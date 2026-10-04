@@ -24,6 +24,7 @@ public class BookingsPageTests
         var ctx = new Bunit.BunitContext();
         ctx.Services.AddSingleton(store);
         ctx.Services.AddSingleton<BookingService>();
+        ctx.Services.AddSingleton<WaitlistService>();
         ctx.Services.AddSingleton(new PersistenceService(tempFile));
         return (ctx, store);
     }
@@ -93,5 +94,57 @@ public class BookingsPageTests
         Assert.IsTrue(alert.TextContent.Contains("cancelled"));
         Assert.IsTrue(page.Markup.Contains("Cancelled"));
         Assert.IsTrue(store.Bookings[0].IsCancelled);
+    }
+
+    // Feature F4: joining the waitlist when a class is full is possible from the UI.
+    [TestMethod]
+    public void Bookings_JoinWaitlist_WhenClassFull_AddsToWaitlist()
+    {
+        var (ctx, store) = CreateContext();
+        using var _ctx = ctx;
+
+        // Fill the seeded Spin class (capacity 2)
+        var spin = store.FindClass("C2")!;
+        spin.ReserveSlot();
+        spin.ReserveSlot();
+
+        var page = ctx.Render<Bookings>();
+
+        page.FindAll("select")[0].Change("M001");
+        page.FindAll("select")[1].Change("C2");
+        page.Find("button.btn-outline-warning").Click();
+
+        Assert.AreEqual(1, store.Waitlist.Count);
+        Assert.AreEqual("M001", store.Waitlist[0].Member.MemberId);
+        Assert.IsTrue(page.Markup.Contains("waitlist for"));
+    }
+
+    // Feature F4: cancelling a booking auto-promotes the oldest waitlister.
+    [TestMethod]
+    public void Bookings_CancellingBooking_AutoPromotesOldestWaitlister()
+    {
+        var (ctx, store) = CreateContext();
+        using var _ctx = ctx;
+
+        // Two members, Spin class capacity 2 - fill it with Aroha, and have a second member waiting.
+        var aroha = store.Members[0];
+        var bob = new Membership("M002", "Bob", DateTime.Today.AddMonths(3));
+        store.Members.Add(bob);
+
+        var spin = store.FindClass("C2")!;
+        var bookingSvc = new BookingService();
+        var booking = bookingSvc.BookClass(aroha, spin).Booking!;
+        spin.ReserveSlot(); // simulate another booking from someone else so spin is full
+        store.Bookings.Add(booking);
+        store.Waitlist.Add(new WaitlistEntry(bob, spin));
+
+        var page = ctx.Render<Bookings>();
+
+        // Cancel Aroha's booking - Bob should be auto-promoted.
+        page.Find("button.btn-outline-danger").Click();
+
+        Assert.AreEqual(0, store.Waitlist.Count, "Bob should have been promoted off the waitlist");
+        Assert.AreEqual(2, store.Bookings.Count, "A new booking should exist for Bob");
+        Assert.IsTrue(store.Bookings[1].Member.MemberId == "M002");
     }
 }
