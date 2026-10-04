@@ -147,4 +147,26 @@ public class BookingsPageTests
         Assert.AreEqual(2, store.Bookings.Count, "A new booking should exist for Bob");
         Assert.IsTrue(store.Bookings[1].Member.MemberId == "M002");
     }
+
+    // Feature F5: CSV export produces a header row plus one data row per booking,
+    // with cancellation status reflected and awkward characters escaped.
+    [TestMethod]
+    public void BuildBookingsCsv_ActiveAndCancelled_ProducesExpectedRows()
+    {
+        var member = new Membership("M1", "Jane, Doe", DateTime.Today.AddMonths(3));
+        var yoga = new FitnessClass("C1", "Yoga", new DateTime(2026, 10, 15, 9, 0, 0), 5);
+        var booking1 = new Booking(member, yoga);
+        var booking2 = new Booking(member, yoga);
+        booking2.Cancel();
+
+        var csv = Bookings.BuildBookingsCsv(new[] { booking1, booking2 });
+
+        var lines = csv.TrimEnd().Split('\n');
+        Assert.AreEqual(3, lines.Length);  // header + 2 rows
+        Assert.IsTrue(lines[0].Contains("MemberId,MemberName,ClassId,ClassName,ClassStart,Status"));
+        // The comma in "Jane, Doe" must be escaped by quoting.
+        Assert.IsTrue(lines[1].Contains("\"Jane, Doe\""));
+        Assert.IsTrue(lines[1].TrimEnd().EndsWith("Active"));
+        Assert.IsTrue(lines[2].TrimEnd().EndsWith("Cancelled"));
+    }
 }
