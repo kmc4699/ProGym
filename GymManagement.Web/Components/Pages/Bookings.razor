@@ -143,7 +143,9 @@
             return;
         }
 
-        var result = BookingSvc.BookClass(member, fitnessClass);
+        // FR8: use the overload that rejects a duplicate booking for the same
+        // member and class.
+        var result = BookingSvc.BookClass(member, fitnessClass, Store.Bookings);
         message = result.Message;
         isError = !result.Success;
 
