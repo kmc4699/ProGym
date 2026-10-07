@@ -198,11 +198,11 @@ namespace GymManagement.Tests
 
 
 
-        // duplicate bookings currently allowed, no rule decided yet 
+        // The base overload (no bookings list) does not check for duplicates - FR8 is enforced by the overload below 
 
         [TestMethod]
 
-        public void BookClass_SameMemberSameClassTwice_CurrentlySucceedsBothTimes()
+        public void BookClass_BaseOverload_DoesNotCheckForDuplicates()
 
         {
 
@@ -255,6 +255,64 @@ namespace GymManagement.Tests
 
             Assert.IsTrue(result.Success);
             Assert.AreEqual(1, futureClass.BookedCount);
+        }
+
+        // FR8: the overload that takes an existing-bookings list rejects a duplicate
+        // booking - same member cannot have two active bookings for the same class.
+        [TestMethod]
+        public void BookClass_DuplicateWithExistingBookingsList_IsRejected()
+        {
+            var service = new BookingService();
+            var yoga = NewClass(5);
+            var member = ActiveMember();
+            var bookings = new List<Booking>();
+
+            var first = service.BookClass(member, yoga, bookings);
+            bookings.Add(first.Booking!);
+            var second = service.BookClass(member, yoga, bookings);
+
+            Assert.IsTrue(first.Success);
+            Assert.IsFalse(second.Success);
+            Assert.IsTrue(second.Message.Contains("already booked"));
+            Assert.AreEqual(1, yoga.BookedCount);
+        }
+
+        // FR8: a member can still book a *different* class even if they are
+        // already booked into another class.
+        [TestMethod]
+        public void BookClass_SameMemberDifferentClass_WithList_Succeeds()
+        {
+            var service = new BookingService();
+            var yoga = NewClass(5);
+            var spin = new FitnessClass("C099", "Spin", DateTime.Today.AddDays(1), 5);
+            var member = ActiveMember();
+            var bookings = new List<Booking>();
+
+            var first = service.BookClass(member, yoga, bookings);
+            bookings.Add(first.Booking!);
+            var second = service.BookClass(member, spin, bookings);
+
+            Assert.IsTrue(first.Success);
+            Assert.IsTrue(second.Success);
+        }
+
+        // FR8: a cancelled booking does not count as a duplicate, so a member
+        // can re-book a class they previously cancelled.
+        [TestMethod]
+        public void BookClass_SameClassAfterCancellation_WithList_IsAllowed()
+        {
+            var service = new BookingService();
+            var yoga = NewClass(5);
+            var member = ActiveMember();
+            var bookings = new List<Booking>();
+
+            var first = service.BookClass(member, yoga, bookings);
+            bookings.Add(first.Booking!);
+            service.CancelBooking(first.Booking!);
+
+            var second = service.BookClass(member, yoga, bookings);
+
+            Assert.IsTrue(second.Success);
         }
 }
 
