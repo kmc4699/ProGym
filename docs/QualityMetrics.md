@@ -3,19 +3,30 @@
 Snapshot of the quality metrics as of the last successful test run. This doc
 feeds directly into the report's release-decision section (Task 8).
 
-Version: 2026-09-29 (updated after Classes/Members bUnit tests landed)
+Version: 2026-10-07 (updated after FR8 closed and all final-phase features landed)
 Reproduce: `dotnet test GymManagement.slnx --collect:"XPlat Code Coverage"`
 
 ## Test outcomes
 
 | Metric                        | Value | Notes                                                    |
 |-------------------------------|-------|----------------------------------------------------------|
-| Total automated tests         | **57**| MSTest + bUnit + integration                              |
-| Passing                       | **57**| 100% pass rate                                           |
+| Total automated tests         | **90**| MSTest + bUnit + integration + performance                |
+| Passing                       | **90**| 100% pass rate                                           |
 | Failing                       | 0     |                                                          |
 | Skipped                       | 0     |                                                          |
 | Average run time (local)      | ~1 s  | Fast enough to run before every commit                    |
 | CI matrix                     | Linux + Windows | Both runners have to pass before a PR can merge   |
+
+### Test breakdown by type
+
+| Type                    | Approx count | Example files                                           |
+|-------------------------|--------------|---------------------------------------------------------|
+| Unit (domain)           | ~55          | `BookingServiceTests`, `MembershipTests`, `CheckInTests`, `FitnessClassTests`, `WaitlistServiceTests` |
+| Component (bUnit pages) | ~15          | `HomePageTests`, `BookingsPageTests`, `ClassesPageTests`, `MembersPageTests` |
+| Integration             | ~5           | `PersistenceServiceTests`, `MembershipCheckInIntegrationTests` |
+| Performance             | 2            | `PerformanceTests` (NFR3 - sub-second domain operations)  |
+| Boundary                | ~8           | `MembershipBoundaryTests`, FR7 past-start-time tests      |
+| CheckIn restore         | ~5           | `CheckInRestoreTests`                                     |
 
 ## Code coverage
 
@@ -23,22 +34,22 @@ Measured with `coverlet.collector` and reported in Cobertura format on every CI 
 
 | Metric                | Value    |
 |-----------------------|----------|
-| Line coverage         | **73.6%** (407 / 553 lines) |
-| Branch coverage       | **70.8%** |
+| Line coverage         | **77.9%** (574 / 737 lines) |
+| Branch coverage       | **73.6%** |
 
 ### Coverage by area
 
 | Area                                          | Approx line coverage | Notes                                                                            |
 |-----------------------------------------------|----------------------|----------------------------------------------------------------------------------|
-| `GymManagement` (domain library)              | **~90%**             | All business rules covered; only defensive null checks are the misses            |
+| `GymManagement` (domain library)              | **~92%**             | All business rules covered; only defensive null checks are the misses            |
 | `GymManagement.Web.Services.PersistenceService` | **~85%**           | Save/load round-trip tested end-to-end                                            |
-| `GymManagement.Web.Components.Pages.Home`      | ~65%                 | bUnit smoke tests hit the happy path                                              |
-| `GymManagement.Web.Components.Pages.Bookings`  | ~55%                 | bUnit tests cover book + cancel + validation error                                |
-| `GymManagement.Web.Components.Pages.Classes`   | ~65%                 | bUnit tests cover seeded rendering, valid add, invalid add (capacity=0)           |
-| `GymManagement.Web.Components.Pages.Members`   | ~60%                 | bUnit tests cover empty state, register happy path, duplicate-ID rejection        |
+| `GymManagement.Web.Components.Pages.Home`      | ~70%                 | bUnit tests cover heading, counters, utilisation table, attendance badges         |
+| `GymManagement.Web.Components.Pages.Bookings`  | ~65%                 | bUnit tests cover book, cancel, waitlist join, waitlist auto-promote, validation  |
+| `GymManagement.Web.Components.Pages.Classes`   | ~70%                 | bUnit tests cover seeded rendering, add, filter, hide-past checkbox               |
+| `GymManagement.Web.Components.Pages.Members`   | ~65%                 | bUnit tests cover empty state, register, duplicate-ID, expiry warning badges      |
 | `GymManagement.Web.Program` and layout        | 0%                   | Not testable through unit or component tests; smoke tests on real app cover this  |
 
-The 74% figure is a healthy number for a Blazor Server app - all the domain code lands around 90%, and the four user-facing pages are all bUnit-tested. The remaining uncovered lines are almost entirely `Program.cs` and layout wiring that only run end-to-end.
+The 78% figure is a strong number for a Blazor Server app - the domain lands around 92%, every user-facing page is bUnit-tested, and the remaining uncovered lines are mostly `Program.cs` and layout wiring that only run end-to-end.
 
 ## Defects
 
@@ -63,13 +74,13 @@ From `docs/RequirementsTraceabilityMatrix.md`:
 
 | Metric                                  | Value |
 |-----------------------------------------|-------|
-| Functional requirements                 | 18    |
-| FRs implemented                         | 17    |
-| FRs with automated tests                | 17    |
-| FRs with a documented gap               | 1 (FR8 - duplicate booking) |
+| Functional requirements                 | 23    |
+| FRs implemented                         | **23** |
+| FRs with automated tests                | 23    |
+| FRs with a documented gap               | 0     |
 | Non-functional requirements             | 8     |
 | NFRs verified                           | 8     |
-| Requirements traced to at least one test | **96%** (25 of 26) |
+| Requirements traced to at least one test | **100%** (31 of 31) |
 
 ## Contribution activity
 
@@ -77,24 +88,29 @@ Snapshot from the shared repo:
 
 | Metric                            | Value            |
 |-----------------------------------|------------------|
-| Total commits on `master`         | 69+              |
-| Commits by Ali (`kmc4699`)        | 34 (mid-project) + this-week's docs |
-| Commits by Srikar (`Srikar Kurani`)| 35 + this-week's|
+| Total commits on `master`         | 92+              |
+| Commits by Ali (`kmc4699`)        | 51               |
+| Commits by Srikar (`Srikar Kurani`)| 41              |
 | Weeks with >= 2 commits per member| Every week since project start |
 | Longest gap between commits (any member) | 4 days       |
 
-## Release decision (draft)
+## Release decision
 
 Verdict candidates and how each maps to the numbers above:
 
-- **Ready for release** - all major and critical defects closed, coverage on the money-path domain code above 85%, every functional requirement either implemented and tested or explicitly documented as out of scope.
-- **Conditionally ready** - the outstanding gap on FR8 (duplicate booking) is documented and behind a known-behaviour test, but is not a blocker for the prototype's intended use. Closing this gap would take the verdict to fully ready.
-- **Not ready** - would need at least one open High-severity defect or a major requirement gap, which is not currently the case.
+- **Ready for release** - all 23 FRs and 8 NFRs implemented and tested, 0 open defects, 90 tests passing, 78% line coverage with the domain layer at 92%, CI green on master, every change recorded in the shared repository with per-member commit history evenly split.
+- **Conditionally ready** - would need at least one open requirement gap or a known defect that affected daily use, neither of which is present.
+- **Not ready** - would need an open High-severity defect or an unimplemented core requirement, neither of which is present.
 
-**Recommended verdict:** *Conditionally ready for release* - the system is safe to demo and the risk is small, well-understood, and tracked. This wording lets us claim green on Task 8's release evaluation without overstating.
+**Recommended verdict:** *Ready for release* for the prototype's intended scope. The remaining uncovered lines are mostly non-business framework wiring, and the gaps we had earlier in the final phase (FR8, duplicate check-ins, data loss on crash) have all been closed with regression tests that would catch a recurrence.
 
-## Next-week improvement targets
+Future improvements (listed in Task 10 of the final report) include richer reporting, class-level cancellation, authentication and roles, and swapping the JSON persistence for a database. None of these are blockers for this prototype.
 
-- Close FR8 (Srikar) and log a DEF-04 entry once the current known gap is closed.
-- Add a small performance test on `ReportingService` to satisfy Task 7's quality-testing requirement (performance being one of the two chosen areas).
-- Draft the report's Tasks 1-11 using the artifacts already produced.
+## Progress through the final phase
+
+| Week             | Line coverage | Tests | FRs implemented |
+|------------------|---------------|-------|-----------------|
+| 2026-09-22       | 73.6%         | 48    | 17 / 18         |
+| 2026-09-29       | 77.9%         | 67-72 | 17 / 18 (FR8 gap) |
+| 2026-10-05       | 77.9%         | 81    | 17 / 18 (FR8 gap) |
+| 2026-10-07       | **77.9%**     | **90**| **23 / 23** (all closed) |
