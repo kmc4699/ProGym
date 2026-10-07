@@ -37,6 +37,33 @@ namespace GymManagement
                 booking);
         }
 
+        // FR8: same as BookClass above, but also rejects a duplicate booking -
+        // the same member cannot have two active bookings for the same class.
+        // Cancelled bookings don't count as duplicates, so a member can re-book
+        // the same class after they cancelled.
+        public BookingResult BookClass(Membership member, FitnessClass fitnessClass,
+            IEnumerable<Booking> existingBookings)
+        {
+            if (existingBookings == null)
+                throw new ArgumentNullException(nameof(existingBookings));
+
+            if (member != null && fitnessClass != null)
+            {
+                foreach (var existing in existingBookings)
+                {
+                    if (!existing.IsCancelled
+                        && existing.Member.MemberId == member.MemberId
+                        && existing.FitnessClass.Id == fitnessClass.Id)
+                    {
+                        return new BookingResult(false,
+                            $"Booking failed: {member.MemberName} is already booked into '{fitnessClass.Name}'.");
+                    }
+                }
+            }
+
+            return BookClass(member!, fitnessClass!);
+        }
+
         // FR10: cancels an existing booking and releases the class slot back
         // so it can be booked again. Returns a clear result either way.
         public BookingResult CancelBooking(Booking booking)
