@@ -33,6 +33,13 @@ Corrective Action: Added ClassId to CheckInDto, updated ToDto() to save the valu
 
 Prevention: Added a unit test (CheckIn_Restore_PreservesClassId) to check that ClassId is preserved when a check-in is restored. This means a future change that breaks this behaviour should be detected by automated testing. The team will also communicate changes to shared data structures, such as DTOs, before merging them.
 
+Lifecycle:
+- 2026-09-29 - Open: identified during manual review of the first persistence integration pass
+- 2026-09-29 - In Progress: Ali assigned, root cause confirmed as missing DTO field
+- 2026-09-29 - Fixed: ClassId added to CheckInDto, CheckIn.Restore factory added, build green locally
+- 2026-09-29 - Verified: CheckIn_Restore_PreservesClassId regression test added and passing in CI
+- 2026-09-29 - Closed: merged to master, CI green on both runners
+
 Status: Closed - the fix was verified by an automated test and merged into master.
 
 ## DEF-02: Data loss when the app is not shut down gracefully
@@ -52,6 +59,13 @@ Root Cause: The persistence design over-relied on a single lifecycle event. The 
 Corrective Action: Added a `PersistenceService.Save(store)` call after every state mutation on the Blazor pages - registering a member, renewing a membership, adding a class, recording a booking, cancelling a booking, and checking in. The shutdown hook is still there as a belt-and-braces backup.
 
 Prevention: Added bUnit tests that render the pages and drive the form submissions, then assert the store has the expected data after each submit. These tests would catch a regression where a page stops calling Save after a mutation. In future, any new mutation on a page must be paired with a persistence save call and a bUnit test that exercises it.
+
+Lifecycle:
+- 2026-09-22 - Open: identified during review of the initial PersistenceService design
+- 2026-09-22 - In Progress: Ali assigned, agreed to move Save calls to every mutation site
+- 2026-09-22 - Fixed: Save() wired into RegisterMember, AddClass, Book, Cancel, CheckIn (commit `ced7f88`)
+- 2026-09-22 - Verified: Save_ThenLoad_RestoresBookingsAndCancelledState bUnit test passing
+- 2026-09-22 - Closed: merged to master, CI green on both runners
 
 Status: Closed - fixed on 2026-09-22 in commit `ced7f88`, verified by bUnit tests.
 
@@ -79,5 +93,12 @@ builder.Services.AddSingleton<ReportingService>();
 and confirmed all four pages loaded without errors.
 
 Prevention: bUnit page tests (added in Week 2 for Home and Bookings) render each page through a fresh `TestContext`. If a required service is missing, the test fails with the same `InvalidOperationException`. This means we now catch a missing DI registration in the automated test run, not the first time a user opens the browser.
+
+Lifecycle:
+- 2026-08-26 - Open: identified on first browser hit to Home page, Blazor renderer threw InvalidOperationException
+- 2026-08-26 - In Progress: Ali assigned, root cause confirmed as missing AddSingleton calls in Program.cs
+- 2026-08-26 - Fixed: three AddSingleton registrations added to Program.cs (commit `0822466`), all four pages loaded cleanly
+- 2026-09-02 - Verified: bUnit page tests added that would reproduce the failure if DI registration regressed
+- 2026-09-02 - Closed: merged to master, CI green on both runners
 
 Status: Closed - fixed on 2026-08-26 in commit `0822466`, verified by bUnit page tests added later.
