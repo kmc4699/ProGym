@@ -3,13 +3,13 @@
 Snapshot of the quality metrics as of the last successful test run. This doc
 feeds directly into the report's release-decision section (Task 8).
 
-Version: 2026-10-17 (updated after DEF-04 fix and waitlist persistence tests)
+Version: 2026-10-17 (updated after DEF-04 fix, waitlist persistence tests and DEF-01 regression tests)
 Reproduce: `dotnet test GymManagement.slnx --collect:"XPlat Code Coverage"`
 
 ## Test outcomes
 
-- Total automated tests: 92
-- Passing: 92 (100% pass rate)
+- Total automated tests: 94
+- Passing: 94 (100% pass rate)
 - Failing: 0
 - Skipped: 0
 - Average run time (local): about 3 seconds
@@ -22,15 +22,15 @@ Reproduce: `dotnet test GymManagement.slnx --collect:"XPlat Code Coverage"`
 - Integration: 7 - PersistenceServiceTests (4), WaitlistPersistenceTests (2), MembershipCheckInIntegrationTests (1)
 - Performance: 2 - PerformanceTests (NFR3, sub-second domain operations)
 - Boundary: 3 - MembershipBoundaryTests
-- CheckIn restore: 3 - CheckInRestoreTests
-- Total: 92
+- CheckIn restore: 5 - CheckInRestoreTests (includes the DEF-01 regression tests)
+- Total: 94
 
 ## Code coverage
 
 Measured with `coverlet.collector` and reported in Cobertura format on every CI run.
 
-- Line coverage: 78.7% (605 of 769 lines)
-- Branch coverage: 74.3% (208 of 280 branches)
+- Line coverage: 79.5% (611 of 769 lines)
+- Branch coverage: 75.0% (210 of 280 branches)
 
 Approximate coverage by area (from the 2026-10-07 run):
 
@@ -67,17 +67,17 @@ From `docs/RequirementsTraceabilityMatrix.md`:
 
 ## Contribution activity
 
-Snapshot from the shared repo:
+Snapshot from the shared repo (2026-10-17):
 
-- Total commits on master (excluding merges): 96
+- Total commits on master (excluding merges): 101
 - Commits by Ali (kmc4699): 53
-- Commits by Srikar (Srikar Kurani): 43
+- Commits by Srikar (Srikar Kurani): 48
 - Both members made at least 2 commits per week since the project started
 - Longest gap between commits (any member): 4 days
 
 ## Release decision
 
-- Ready for release: all 23 FRs and 8 NFRs implemented and tested, 0 open defects, 92 tests passing, 79% line coverage with the domain layer at 92%, CI green on master, every change recorded in the shared repository.
+- Ready for release: all 23 FRs and 8 NFRs implemented and tested, 0 open defects, 94 tests passing, 79% line coverage with the domain layer at 92%, CI green on master, every change recorded in the shared repository.
 - Conditionally ready: would need at least one open requirement gap or a known defect that affected daily use. Neither is present.
 - Not ready: would need an open High-severity defect or an unimplemented core requirement. Neither is present.
 
@@ -91,4 +91,4 @@ Future improvements (listed in Task 10 of the final report) include richer repor
 - 2026-09-29: 77.9% line coverage, 67-72 tests, 17 of 18 FRs (FR8 gap)
 - 2026-10-05: 77.9% line coverage, 81 tests, 17 of 18 FRs (FR8 gap)
 - 2026-10-07: 77.9% line coverage, 90 tests, 23 of 23 FRs (all closed)
-- 2026-10-17: 78.7% line coverage, 92 tests, 23 of 23 FRs (DEF-04 fixed)
+- 2026-10-17: 79.5% line coverage, 94 tests, 23 of 23 FRs (DEF-04 fixed)
