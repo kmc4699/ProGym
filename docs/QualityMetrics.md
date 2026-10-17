@@ -67,11 +67,11 @@ From `docs/RequirementsTraceabilityMatrix.md`:
 
 ## Contribution activity
 
-Snapshot from the shared repo (2026-10-17):
+Snapshot from the shared repo (2026-10-17, end-of-day):
 
-- Total commits on master (excluding merges): 101
+- Total commits on master: 109 (including merges) / 103 (excluding merges)
 - Commits by Ali (kmc4699): 53
-- Commits by Srikar (Srikar Kurani): 48
+- Commits by Srikar (Srikar Kurani): 50
 - Both members made at least 2 commits per week since the project started
 - Longest gap between commits (any member): 4 days
 
