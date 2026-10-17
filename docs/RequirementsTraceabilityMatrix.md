@@ -1,5 +1,3 @@
-cd C:\Users\srika\ProGym
-@'
 # ProGym - Requirements Traceability Matrix
 
 This document maps every requirement to the code that implements it, the
@@ -211,6 +209,3 @@ Test suite: 94 automated tests, 0 failing on the last local run
 - Requirements traced to at least one automated test or documented check: 100%.
 
 No remaining requirement gaps for the Assessment 2 submission. Future improvements are tracked in `docs/QualityMetrics.md` and in the final report (Task 10).
-
-'@ | Set-Content -Path docs\RequirementsTraceabilityMatrix.md -Encoding ASCII
-git status
