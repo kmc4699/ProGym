@@ -63,11 +63,11 @@ Prevention: Added bUnit tests that render the pages and drive the form submissio
 Lifecycle:
 - 2026-09-22 - Open: identified during review of the initial PersistenceService design
 - 2026-09-22 - In Progress: Ali assigned, agreed to move Save calls to every mutation site
-- 2026-09-22 - Fixed: Save() wired into RegisterMember, AddClass, Book, Cancel, CheckIn (commit `ced7f88`)
+- 2026-09-22 - Fixed: Save() wired into RegisterMember, AddClass, Book, Cancel, CheckIn (commit `2e0b297`)
 - 2026-09-22 - Verified: Save_ThenLoad_RestoresBookingsAndCancelledState persistence test passing
 - 2026-09-22 - Closed: merged to master, CI green on both runners
 
-Status: Closed - fixed on 2026-09-22 in commit `ced7f88`, verified by bUnit tests.
+Status: Closed - fixed on 2026-09-22 in commit `2e0b297`, verified by bUnit tests.
 
 
 ## DEF-03: Blazor Server pages fail at first request because required services are not registered
